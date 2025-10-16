@@ -1,0 +1,1 @@
+export const GET_ALL_SUBJECT = "GET_ALL_SUBJECT";
