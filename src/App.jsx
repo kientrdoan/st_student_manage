@@ -4,7 +4,7 @@ import Home from "./pages/Home";
 import HomeTemplate from "./my_templates/HomeTemplate";
 import { TOKEN } from "../utils/Config";
 import Profile from "./pages/Profile";
-import TimeTable from "./pages/TimeTable";
+import Subject from "./pages/Subject";
 
 function App() {
   const ProtectedRoute = () => {
@@ -18,8 +18,8 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<HomeTemplate />}>
             <Route index element={<Home />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="time-table" element={<TimeTable />} />
+            <Route path="profile/:id" element={<Profile />} />
+            <Route path="subjects" element={<Subject />} />
           </Route>
         </Route>
 
