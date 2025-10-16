@@ -1,273 +1,272 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import {
-  Table,
-  Button,
-  Input,
-  Space,
-  Dropdown,
-  Checkbox,
-  Tag,
-  message,
-  Spin,
-  Empty,
-} from "antd";
-import {
-  SearchOutlined,
-  SettingOutlined,
-  ReadOutlined,
-  PlusOutlined,
-  ArrowLeftOutlined,
-} from "@ant-design/icons";
-import { useDispatch, useSelector } from "react-redux";
-import { getCourseEnrollmentAction } from "../redux/actions/CourseEnrollmentAction";
-import { useParams, useNavigate } from "react-router-dom";
+"use client"
+import { useState, useEffect } from "react"
+import { Table, Button, Input, Space, Tag, Card, message, Modal } from "antd"
+import { SearchOutlined, BookOutlined, PlusOutlined, UserOutlined, HomeOutlined, CalendarOutlined } from "@ant-design/icons"
+import { useDispatch, useSelector } from "react-redux"
+import { getAllAvailableCoursesAction, enrollCourseAction } from "../redux/actions/CourseEnrollmentAction"
 
 export default function CourseEnrollment() {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { id } = useParams(); // lấy id từ URL (vd: /course-enrollment/9)
+  const dispatch = useDispatch()
+  const [messageApi, contextHolder] = message.useMessage()
+  const [searchText, setSearchText] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [enrollModalVisible, setEnrollModalVisible] = useState(false)
+  const [selectedCourse, setSelectedCourse] = useState(null)
 
-  const [loading, setLoading] = useState(true);
-  const [searchText, setSearchText] = useState("");
-  const [messageApi, contextHolder] = message.useMessage();
+  // Lấy dữ liệu từ Redux store
+  const courses = useSelector((state) => state.CourseEnrollmentReducer?.available_courses || [])
 
-  const enrollments = useSelector(  (state) => state.CourseEnrollmentReducer.course_enrollments    );
-
-  const [visibleColumns, setVisibleColumns] = useState({
-    subject_code: true,
-    subject_name: true,
-    credit: true,
-    teacher: true,
-    class_name: true,
-    major: true,
-    room: true,
-    capacity: true,
-  });
-
+  // Lấy danh sách các môn học có sẵn khi component mount
   useEffect(() => {
-    if (id) {
-      const fetchData = async () => {
-        setLoading(true);
-        const res = await dispatch(getCourseEnrollmentAction(id));
-        if (!res?.success) {
-          messageApi.error("Không thể tải danh sách môn học!");
-          setTimeout(() => navigate(-1), 2000);
-        }
-        setLoading(false);
-      };
-      fetchData();
-    } else {
-      messageApi.warning("Không tìm thấy ID sinh viên trong URL.");
-      navigate(-1);
+    const fetchCourses = async () => {
+      setLoading(true)
+      const res = await dispatch(getAllAvailableCoursesAction())
+      if (!res?.success) {
+        messageApi.error("Không thể tải danh sách môn học!")
+      }
+      setLoading(false)
     }
-  }, [dispatch, id, navigate, messageApi]);
+    fetchCourses()
+  }, [dispatch, messageApi])
 
-  const filteredData = enrollments.filter((item) => {
-    const text = searchText.toLowerCase();
+  // Lọc dữ liệu theo từ khóa tìm kiếm
+  const filteredData = courses.filter((item) => {
+    const text = searchText.toLowerCase()
     return (
       item.subject?.code?.toLowerCase().includes(text) ||
       item.subject?.name?.toLowerCase().includes(text) ||
       item.teacher?.user?.first_name?.toLowerCase().includes(text) ||
+      item.teacher?.user?.last_name?.toLowerCase().includes(text) ||
       item.class_st?.name?.toLowerCase().includes(text)
-    );
-  });
+    )
+  })
 
-  const toggleColumn = (key) =>
-    setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
+  // Xử lý đăng ký môn học
+  const handleEnrollCourse = async () => {
+    if (!selectedCourse?.id) return
+    
+    setLoading(true)
+    const res = await dispatch(enrollCourseAction(selectedCourse.id))
+    
+    if (res?.success) {
+      messageApi.success(res.message || "Đăng ký môn học thành công!")
+      setEnrollModalVisible(false)
+      setSelectedCourse(null)
+      // Refresh lại danh sách
+      await dispatch(getAllAvailableCoursesAction())
+    } else {
+      messageApi.error(res?.message || "Đăng ký môn học thất bại!")
+    }
+    setLoading(false)
+  }
 
-  const columnMenu = {
-    items: Object.keys(visibleColumns).map((key) => ({
-      key,
-      label: (
-        <Checkbox
-          checked={visibleColumns[key]}
-          onChange={() => toggleColumn(key)}
-        >
-          {key.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-        </Checkbox>
-      ),
-    })),
-  };
+  // Hiển thị modal xác nhận đăng ký
+  const showEnrollModal = (course) => {
+    setSelectedCourse(course)
+    setEnrollModalVisible(true)
+  }
 
-  const handleRegister = (record) => {
-    messageApi.success(`✅ Đã đăng ký môn ${record.subject.name}!`);
-    // 🔹 TODO: Gọi API đăng ký môn học tại đây nếu backend có endpoint
-  };
-
-  const allColumns = [
+  const columns = [
     {
-      title: "Mã môn học",
+      title: "Subject Code",
       dataIndex: ["subject", "code"],
       key: "subject_code",
-      visible: visibleColumns.subject_code,
-      render: (code) => <Tag color="purple">{code}</Tag>,
       width: 130,
+      render: (code) => <Tag color="purple">{code}</Tag>,
     },
     {
-      title: "Tên môn học",
+      title: "Subject Name",
       dataIndex: ["subject", "name"],
       key: "subject_name",
-      visible: visibleColumns.subject_name,
-      width: 260,
+      width: 250,
+      render: (name) => <span className="font-medium">{name}</span>,
     },
     {
-      title: "Số tín chỉ",
+      title: "Credits",
       dataIndex: ["subject", "credit"],
       key: "credit",
-      visible: visibleColumns.credit,
-      width: 100,
+      width: 80,
+      align: "center",
+      render: (credit) => <Tag color="blue">{credit}</Tag>,
     },
     {
-      title: "Giảng viên",
-      dataIndex: ["teacher", "user"],
+      title: "Teacher",
       key: "teacher",
-      visible: visibleColumns.teacher,
-      render: (user) =>
-        user ? (
+      width: 180,
+      render: (_, record) => {
+        const teacher = record.teacher?.user
+        return teacher ? (
           <span>
-            {user.last_name} {user.first_name}
+            <UserOutlined className="mr-2 text-gray-400" />
+            {`${teacher.last_name} ${teacher.first_name}`}
           </span>
         ) : (
-          <span className="text-gray-400 italic">Chưa có</span>
-        ),
-      width: 180,
+          <span className="text-gray-400 italic">N/A</span>
+        )
+      },
     },
     {
-      title: "Lớp",
+      title: "Class",
       dataIndex: ["class_st", "name"],
-      key: "class_name",
-      visible: visibleColumns.class_name,
-      width: 160,
+      key: "class",
+      width: 150,
+      render: (className) => <Tag color="cyan">{className}</Tag>,
     },
     {
-      title: "Ngành học",
+      title: "Major",
       dataIndex: ["class_st", "major", "name"],
       key: "major",
-      visible: visibleColumns.major,
-      render: (major) => <Tag color="blue">{major}</Tag>,
-      width: 180,
+      width: 200,
+      render: (major) => (
+        <span className="text-gray-600">{major || "N/A"}</span>
+      ),
     },
     {
-      title: "Phòng học",
+      title: "Room",
       dataIndex: ["room", "room_code"],
       key: "room",
-      visible: visibleColumns.room,
-      width: 120,
+      width: 100,
+      align: "center",
+      render: (room) => (
+        <Tag color="orange" icon={<HomeOutlined />}>
+          {room}
+        </Tag>
+      ),
     },
     {
-      title: "Sức chứa",
+      title: "Capacity",
       dataIndex: "max_capacity",
       key: "capacity",
-      visible: visibleColumns.capacity,
-      render: (cap) => <Tag color="green">{cap}</Tag>,
-      width: 120,
+      width: 100,
+      align: "center",
+      render: (capacity) => (
+        <span className="font-semibold text-green-600">{capacity}</span>
+      ),
     },
     {
-      title: "Thao tác",
+      title: "Action",
       key: "action",
       fixed: "right",
+      width: 120,
       render: (_, record) => (
         <Button
           type="primary"
           icon={<PlusOutlined />}
-          className="rounded-lg"
-          onClick={() => handleRegister(record)}
+          onClick={() => showEnrollModal(record)}
+          className="bg-green-600 hover:bg-green-700"
+          size="small"
         >
-          Đăng ký
+          Enroll
         </Button>
       ),
-      width: 140,
     },
-  ];
-
-  const columns = allColumns.filter((col) => col.visible);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-full">
-        <Spin size="large" />
-      </div>
-    );
-  }
+  ]
 
   return (
-    <>
+    <div className="h-full flex flex-col">
       {contextHolder}
-      <div className="h-full flex flex-col bg-gray-50 p-6">
-        <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-sm p-6 flex flex-col h-full">
-          {/* Header */}
-          <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                <ReadOutlined className="text-indigo-600 text-lg" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Đăng ký môn học
-                </h1>
-                <p className="text-sm text-gray-500">
-                  Danh sách các môn học có thể đăng ký cho sinh viên ID:{" "}
-                  <span className="font-medium text-indigo-600">{id}</span>
-                </p>
-              </div>
+      <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col h-full">
+        {/* Header */}
+        <div className="mb-6 flex-shrink-0">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+              <BookOutlined className="text-green-600 text-lg" />
             </div>
-
-            <Button
-              icon={<ArrowLeftOutlined />}
-              onClick={() => navigate(-1)}
-              size="large"
-            >
-              Quay lại
-            </Button>
-          </div>
-
-          {/* Toolbar */}
-          <div className="flex items-center justify-between mb-6 gap-4">
-            <Space size="middle">
-              <Input
-                placeholder="Tìm kiếm môn học..."
-                prefix={<SearchOutlined className="text-gray-400" />}
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                style={{ width: 320 }}
-                size="large"
-                allowClear
-                className="rounded-lg"
-              />
-              <Dropdown menu={columnMenu} trigger={["click"]}>
-                <Button
-                  icon={<SettingOutlined />}
-                  size="large"
-                  className="rounded-lg"
-                >
-                  Cột hiển thị
-                </Button>
-              </Dropdown>
-            </Space>
-          </div>
-
-          {/* Table */}
-          <div className="flex-1 overflow-hidden">
-            {filteredData.length > 0 ? (
-              <Table
-                columns={columns}
-                dataSource={filteredData}
-                rowKey={(r) => r.id}
-                bordered
-                pagination={{
-                  pageSize: 5,
-                  showSizeChanger: true,
-                  showTotal: (total) => `Tổng ${total} môn học`,
-                }}
-              />
-            ) : (
-              <Empty description="Không có môn học nào để hiển thị" />
-            )}
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Course Enrollment</h1>
+              <p className="text-sm text-gray-500">Browse and enroll in available courses</p>
+            </div>
           </div>
         </div>
+
+        {/* Toolbar */}
+        <div className="flex items-center justify-between mb-6 gap-4 flex-shrink-0">
+          <Card className="shadow-sm">
+            <div className="flex items-center gap-4">
+              <CalendarOutlined className="text-2xl text-blue-500" />
+              <div>
+                <p className="text-xs text-gray-500">Available Courses</p>
+                <p className="text-2xl font-bold text-gray-900">{courses.length}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Space size="middle">
+            <Input
+              placeholder="Search courses, teachers, classes..."
+              prefix={<SearchOutlined className="text-gray-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{ width: 350 }}
+              size="large"
+              allowClear
+              className="rounded-lg"
+            />
+          </Space>
+        </div>
+
+        {/* Table */}
+        <div className="flex-1 overflow-hidden">
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            rowKey={(r) => r.id}
+            bordered
+            loading={loading}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} courses`,
+              pageSizeOptions: ["10", "20", "50"],
+            }}
+            scroll={{ x: 1200 }}
+          />
+        </div>
       </div>
-    </>
-  );
+
+      {/* Modal xác nhận đăng ký */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <BookOutlined className="text-green-600" />
+            <span>Confirm Course Enrollment</span>
+          </div>
+        }
+        open={enrollModalVisible}
+        onOk={handleEnrollCourse}
+        onCancel={() => {
+          setEnrollModalVisible(false)
+          setSelectedCourse(null)
+        }}
+        okText="Confirm Enrollment"
+        cancelText="Cancel"
+        okButtonProps={{ className: "bg-green-600 hover:bg-green-700" }}
+        confirmLoading={loading}
+      >
+        {selectedCourse && (
+          <div className="space-y-3 mt-4">
+            <p className="text-gray-700">
+              <strong>Subject:</strong> {selectedCourse.subject?.name} ({selectedCourse.subject?.code})
+            </p>
+            <p className="text-gray-700">
+              <strong>Credits:</strong> {selectedCourse.subject?.credit}
+            </p>
+            <p className="text-gray-700">
+              <strong>Teacher:</strong>{" "}
+              {`${selectedCourse.teacher?.user?.last_name || ""} ${selectedCourse.teacher?.user?.first_name || ""}`.trim() || "N/A"}
+            </p>
+            <p className="text-gray-700">
+              <strong>Class:</strong> {selectedCourse.class_st?.name}
+            </p>
+            <p className="text-gray-700">
+              <strong>Room:</strong> {selectedCourse.room?.room_code}
+            </p>
+            <p className="text-gray-700">
+              <strong>Capacity:</strong> {selectedCourse.max_capacity} students
+            </p>
+          </div>
+        )}
+      </Modal>
+    </div>
+  )
 }
