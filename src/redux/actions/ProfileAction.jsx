@@ -1,30 +1,35 @@
+/* eslint-disable no-unused-vars */
+
 import { profileService } from "../../../service/ProfileService";
 import { GET_PROFILE } from "../types/ProfileType";
-import { TOKEN } from "../../../utils/Config";
-import { jwtDecode } from "jwt-decode";
-export const getProfileAction = () => {
+
+export const getDetailStudentByUserIdAction = (id) => {
   return async (dispatch) => {
     try {
-      // 🔹 Lấy token từ localStorage
-      const token = localStorage.getItem(TOKEN);
-      if (!token) throw new Error("No token found");
-
-      // 🔹 Giải mã token để lấy user_id
-      const decoded = jwtDecode(token);
-      const userId = decoded.user_id;
-      console.log(" Profile Action - Route ID:", userId)
-      // 🔹 Gọi API lấy thông tin user
-      const result = await profileService.getProfile(userId);
-
+      const result = await profileService.getProfile(id);
       if (result.status === 200) {
         dispatch({
           type: GET_PROFILE,
-          profile: result.data.data,
+          student_detail: result.data.data
         });
         return { success: true, data: result.data.data };
       }
     } catch (error) {
-      console.log("getProfileAction error:", error);
+      console.log("error", error);
+      return { success: false, error };
+    }
+  };
+};
+
+export const editInfoStudentByUserIdAction = (id) => {
+  return async (dispatch) => {
+    try {
+      const result = await profileService.editInfoTeacherByUserId(id);
+      if (result.status === 200) {
+        return { success: true, data: result.data.data };
+      }
+    } catch (error) {
+      console.log("error", error);
       return { success: false, error };
     }
   };

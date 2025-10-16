@@ -6,7 +6,7 @@ export class ProfileService extends BaseService {
   }
 
     getProfile = (id) => {
-    return this.get_token(`/students/profile/${id}`); // <-- Sửa thành dấu backtick ` `
+    return this.get_token(`/students/profile/${id}`);
     };
 
 }

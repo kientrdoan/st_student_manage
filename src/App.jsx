@@ -1,4 +1,10 @@
-import { BrowserRouter, Route, Routes, Navigate, Outlet } from "react-router-dom";
+import {
+  BrowserRouter,
+  Route,
+  Routes,
+  Navigate,
+  Outlet,
+} from "react-router-dom";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import HomeTemplate from "./my_templates/HomeTemplate";
@@ -6,25 +12,66 @@ import { TOKEN } from "../utils/Config";
 import Profile from "./pages/Profile";
 import Subject from "./pages/Subject";
 import CourseEnrollment from "./pages/CourseEnrollment";
+import TimeTable from "./pages/TimeTable";
+import Course from "./pages/Course";
+import { useDispatch } from "react-redux";
+import { useEffect } from "react";
+
+import { jwtDecode } from "jwt-decode";
+import { LOGIN_ACTION } from "./redux/types/UserType";
+
 function App() {
+  const dispatch = useDispatch();
+
+  // 🔹 Decode token và restore user ngay khi App mount
+  useEffect(() => {
+    const token = localStorage.getItem(TOKEN);
+    if (token) {
+      try {
+        const payload = jwtDecode(token);
+        const currentTime = Date.now() / 1000;
+
+        if (payload.exp > currentTime) {
+          dispatch({
+            type: LOGIN_ACTION,
+            access_token: token,
+            user: {
+              user_id: payload.user_id,
+              name: payload.name,
+              role: payload.role,
+            },
+          });
+        } else {
+          localStorage.removeItem(TOKEN);
+        }
+      } catch (error) {
+        console.error("Decode token lỗi:", error);
+        localStorage.removeItem(TOKEN);
+      }
+    }
+  }, [dispatch]);
+
+  // 🔹 Route bảo vệ
   const ProtectedRoute = () => {
     const token = localStorage.getItem(TOKEN);
-    return token ? <Outlet /> : <Navigate to="/login" replace />;
+    return token ? <Outlet /> : <Navigate to='/login' replace />;
   };
 
   return (
     <BrowserRouter>
       <Routes>
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<HomeTemplate />}>
+          <Route path='/' element={<HomeTemplate />}>
             <Route index element={<Home />} />
-            <Route path="profile/:id" element={<Profile />} />
-            <Route path="/courses/enrollments" element={<CourseEnrollment />} />
-            <Route path="subjects" element={<Subject />} />
+            <Route path='profile' element={<Profile />} />
+            <Route path='courses/enrollments' element={<CourseEnrollment />} />
+            <Route path='subjects' element={<Subject />} />
+            <Route path='time-tables' element={<TimeTable />} />
+            <Route path='courses' element={<Course />} />
           </Route>
         </Route>
 
-        <Route path="/login" element={<Login />} />
+        <Route path='/login' element={<Login />} />
       </Routes>
     </BrowserRouter>
   );
