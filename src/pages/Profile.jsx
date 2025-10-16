@@ -1,10 +1,14 @@
 "use client"
+import { TOKEN } from "../../utils/Config"
+
+const token = localStorage.getItem(TOKEN)
+console.log("Access token:", token)
 
 import { useEffect, useState } from "react"
 import { Form, Input, Select, Button, Card, Row, Col, DatePicker, Spin, message } from "antd"
 import { UserOutlined, ArrowLeftOutlined } from "@ant-design/icons"
 import { useDispatch } from "react-redux"
-import { getProfileActionById } from "../redux/actions/ProfileAction" // <-- Cập nhật đường dẫn nếu cần
+import { getProfileAction } from "../redux/actions/ProfileAction" // <-- Cập nhật đường dẫn nếu cần
 import { useParams, useNavigate } from "react-router-dom"
 import moment from "moment"
 
@@ -15,14 +19,14 @@ export default function ProfileDetail() {
   const [loading, setLoading] = useState(true)
   const [messageApi, contextHolder] = message.useMessage()
   const { id } = useParams() // Lấy ID từ URL, ví dụ: /profile/9
-  console.log("[v0] Profile - Route ID:", id)
+  console.log("Profile id - Route ID:", id)
   useEffect(() => {
     // Chỉ thực hiện gọi API nếu có ID trên URL
     if (id) {
       const fetchProfileData = async () => {
         setLoading(true)
         // Gọi action bạn đã cung cấp và truyền `id` vào
-        const res = await dispatch(getProfileActionById(id))
+        const res = await dispatch(getProfileAction(id))
 
         if (res?.success && res?.data) {
           // Dữ liệu từ API trả về thành công

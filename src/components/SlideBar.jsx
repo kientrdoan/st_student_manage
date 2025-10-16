@@ -7,7 +7,7 @@ const menuItems = [
   { name: "Subjects", path: "/subjects", icon: FiBook },
   // Đường dẫn Profile sẽ được xử lý động ở dưới
   { name: "Profile", path: "/profile", icon: FiLayers }, 
-  { name: "Class", path: "/class", icon: FiUsers },
+  { name: "Enrollment", path: "/courses/enrollments", icon: FiUsers },
   { name: "Semesters", path: "/semesters", icon: FiCalendar },
   { name: "Rooms", path: "/rooms", icon: FiHome },
   { name: "Courses", path: "/courses", icon: FiBookOpen },
