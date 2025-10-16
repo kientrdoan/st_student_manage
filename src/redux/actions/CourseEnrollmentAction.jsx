@@ -1,8 +1,9 @@
-import { profileService } from "../../../service/ProfileService";
-import { GET_PROFILE } from "../types/ProfileType";
+import { courseEnrollmentService } from "../../../service/CourseEnrollmentService";
+import { GET_COURSE_ENROLLMENT } from "../types/CourseEnrollmentType";
 import { TOKEN } from "../../../utils/Config";
 import { jwtDecode } from "jwt-decode";
-export const getProfileAction = () => {
+
+export const getCourseEnrollmentAction = () => {
   return async (dispatch) => {
     try {
       // 🔹 Lấy token từ localStorage
@@ -12,19 +13,20 @@ export const getProfileAction = () => {
       // 🔹 Giải mã token để lấy user_id
       const decoded = jwtDecode(token);
       const userId = decoded.user_id;
-      console.log(" Profile Action - Route ID:", userId)
-      // 🔹 Gọi API lấy thông tin user
-      const result = await profileService.getProfile(userId);
+      console.log("Course Enrollment Action - User ID:", userId);
+
+      // 🔹 Gọi API lấy danh sách khóa học đã ghi danh của user
+      const result = await courseEnrollmentService.getCourseEnrollment(userId);
 
       if (result.status === 200) {
         dispatch({
-          type: GET_PROFILE,
-          profile: result.data.data,
+          type: GET_COURSE_ENROLLMENT,
+          course_enrollments: result.data.data,
         });
         return { success: true, data: result.data.data };
       }
     } catch (error) {
-      console.log("getProfileAction error:", error);
+      console.log("getCourseEnrollmentAction error:", error);
       return { success: false, error };
     }
   };
