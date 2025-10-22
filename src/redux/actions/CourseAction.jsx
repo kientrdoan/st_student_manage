@@ -7,8 +7,7 @@ export const getAllCourseByStudentAndSemesterAction = (student_id, semester_id) 
   return async (dispatch) => {
     try {
       const result = await courseService.getCourseByStudentAndSemester(student_id, semester_id);
-      console.log("data", result)
-      console.log(result)
+      console.log("course", result)
       if (result.status === 200) {
         dispatch({
           type: GET_ALL_COURSE_BY_STUDENT_SEMESTER,
