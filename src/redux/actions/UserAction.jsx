@@ -18,7 +18,8 @@ export const loginAction = (thongTinDangNhap) => {
           user: {
             user_id: payload.user_id,
             full_name: payload.name,
-            role: payload.role
+            role: payload.role,
+            class_id: payload.class_student
           }
         });
         return { success: true, data: result.data.data };

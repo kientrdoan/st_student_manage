@@ -11,7 +11,6 @@ import HomeTemplate from "./my_templates/HomeTemplate";
 import { TOKEN } from "../utils/Config";
 import Profile from "./pages/Profile";
 import Subject from "./pages/Subject";
-import CourseEnrollment from "./pages/CourseEnrollment";
 import TimeTable from "./pages/TimeTable";
 import Course from "./pages/Course";
 import { useDispatch } from "react-redux";
@@ -19,6 +18,7 @@ import { useEffect } from "react";
 
 import { jwtDecode } from "jwt-decode";
 import { LOGIN_ACTION } from "./redux/types/UserType";
+import Enrollment from "./pages/Enrollment";
 
 function App() {
   const dispatch = useDispatch();
@@ -39,6 +39,7 @@ function App() {
               user_id: payload.user_id,
               name: payload.name,
               role: payload.role,
+              class_id: payload.class_student
             },
           });
         } else {
@@ -64,7 +65,7 @@ function App() {
           <Route path='/' element={<HomeTemplate />}>
             <Route index element={<Home />} />
             <Route path='profile' element={<Profile />} />
-            <Route path='courses/enrollments' element={<CourseEnrollment />} />
+            <Route path='enrollments' element={<Enrollment />} />
             <Route path='subjects' element={<Subject />} />
             <Route path='time-tables' element={<TimeTable />} />
             <Route path='courses' element={<Course />} />

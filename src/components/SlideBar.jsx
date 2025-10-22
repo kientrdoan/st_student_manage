@@ -2,9 +2,9 @@ import { NavLink } from "react-router-dom"
 import { FiHome, FiUsers, FiBook, FiCalendar, FiGrid, FiLayers, FiBookOpen, FiUser, FiUserCheck } from "react-icons/fi"
 
 const menuItems = [
-  { name: "Subjects", path: "/subjects", icon: FiBook },
   { name: "Profile", path: "/profile", icon: FiLayers }, 
-  { name: "Enrollment", path: "/courses/enrollments", icon: FiUsers },
+  { name: "Subjects", path: "/subjects", icon: FiBook },
+  { name: "Enrollment", path: "/enrollments", icon: FiUsers },
   { name: "Time Table", path: "/time-tables", icon: FiCalendar },
   { name: "Course", path: "/courses", icon: FiCalendar },
 ];

@@ -1,0 +1,1 @@
+export const GET_ALL_CLASS = "GET_ALL_CLASS"

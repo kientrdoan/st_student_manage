@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Table, Button, Input, Space, Dropdown, Checkbox, Tag } from "antd"
 import { SearchOutlined, SettingOutlined, BookOutlined, PlusOutlined, EditOutlined } from "@ant-design/icons"
 import { Link } from "react-router-dom"
-import dayjs from "dayjs"
+// import dayjs from "dayjs"
 import { getAllSubjectAction } from "../redux/actions/SubjectAction"
 import { useDispatch, useSelector } from "react-redux"
 
@@ -126,11 +126,11 @@ export default function SubjectList() {
 
         {/* Toolbar */}
         <div className="flex items-center justify-between mb-6 gap-4 flex-shrink-0">
-          <Link to="/subjects/detail">
+          {/* <Link to="/subjects/detail">
             <Button type="primary" icon={<PlusOutlined />} size="large" className="shadow-sm">
               Add Subject
             </Button>
-          </Link>
+          </Link> */}
 
           <Space size="middle">
             <Input
