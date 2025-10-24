@@ -22,6 +22,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getAllCourseByStudentAndSemesterAction } from "../redux/actions/CourseAction";
 import { getAllSemeterAction } from "../redux/actions/SemesterAction";
 import { DeleteCourseEnrollmentAction } from "../redux/actions/EnrollmentAction";
+import { NavLink } from "react-router-dom";
 
 export default function ClassSchedule() {
   const user = useSelector((state) => state.UserReducer.user);
@@ -126,7 +127,8 @@ export default function ClassSchedule() {
       visible: visibleColumns.subject,
       render: (_, record) => (
         <span>
-          <Tag color="green">{record.subject_code}</Tag> {record.subject_name}
+          <NavLink to="/attend"><Tag color="green"> {record.subject_code} {record.subject_name} </Tag> </NavLink>
+          
         </span>
       ),
     },

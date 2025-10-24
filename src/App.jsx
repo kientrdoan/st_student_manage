@@ -19,6 +19,7 @@ import { useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 import { LOGIN_ACTION } from "./redux/types/UserType";
 import Enrollment from "./pages/Enrollment";
+import Attend from "./pages/Attend";
 
 function App() {
   const dispatch = useDispatch();
@@ -69,6 +70,7 @@ function App() {
             <Route path='subjects' element={<Subject />} />
             <Route path='time-tables' element={<TimeTable />} />
             <Route path='courses' element={<Course />} />
+            <Route path='attend' element={<Attend />} />
           </Route>
         </Route>
 
