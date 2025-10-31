@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useMemo, useEffect } from "react";
 import { MdSettings, MdBook, MdGroup, MdCheckBox } from "react-icons/md";
 import { Table, Select, Button, Tag, Card, Space, Typography } from "antd";
@@ -7,8 +9,9 @@ import {
   getCourseEnrollmentAction,
 } from "../redux/actions/EnrollmentAction";
 import { getAllClassAction } from "../redux/actions/ClassAction";
-import { getAllSemeterAction } from "../redux/actions/SemesterAction";
 import { getAllCourseByStudentAndSemesterAction } from "../redux/actions/CourseAction";
+import { getCurrentSemeterAction } from "../redux/actions/SemesterAction";
+import dayjs from "dayjs";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -16,52 +19,63 @@ const { Option } = Select;
 export default function Enrollment() {
   const dispatch = useDispatch();
 
-  const enrollments = useSelector(
-    (state) => state.EnrollmentReducer.enrollments
-  );
-  const semesters = useSelector((state) => state.SemesterReducer.semesters);
+  const enrollments = useSelector((state) => state.EnrollmentReducer.enrollments);
+  const semester_detail = useSelector((state) => state.SemesterReducer.semester_detail);
   const classes = useSelector((state) => state.ClassReducer.classes);
   const user = useSelector((state) => state.UserReducer.user);
   const courses = useSelector((state) => state.CourseReducer.courses);
 
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
 
+  // Kiểm tra thời gian đăng ký
   useEffect(() => {
-    dispatch(getAllSemeterAction());
+    if (semester_detail?.open_date && semester_detail?.close_date) {
+      const now = dayjs();
+      const openDate = dayjs(semester_detail.open_date);
+      const closeDate = dayjs(semester_detail.close_date);
+      setIsOpen(now.isAfter(openDate) && now.isBefore(closeDate.add(1, "day")));
+    }
+  }, [semester_detail]);
+
+  // Load semester hiện tại và lớp
+  useEffect(() => {
+    dispatch(getCurrentSemeterAction());
     dispatch(getAllClassAction());
   }, [dispatch]);
 
+  // Load courses theo student và semester
   useEffect(() => {
-    if (semesters.length > 0 && user?.user_id) {
-      dispatch(
-        getAllCourseByStudentAndSemesterAction(user.user_id, semesters[0].id)
-      );
+    if (semester_detail && user?.user_id) {
+      dispatch(getAllCourseByStudentAndSemesterAction(user.user_id, semester_detail.id));
     }
-  }, [dispatch, user, semesters]);
+  }, [dispatch, user, semester_detail]);
 
+  // Set default class và load enrollment
   useEffect(() => {
-    if (classes.length > 0 && semesters.length > 0 && user?.class_id) {
+    if (classes.length > 0 && semester_detail && user?.class_id) {
       const defaultClass = classes.find((c) => c.id === user.class_id);
       if (defaultClass) {
         setSelectedClass(defaultClass.id);
-        dispatch(getCourseEnrollmentAction(defaultClass.id, semesters[0].id));
+        dispatch(getCourseEnrollmentAction(defaultClass.id, semester_detail.id));
       }
     }
-  }, [classes, semesters, user, dispatch]);
+  }, [classes, semester_detail, user, dispatch]);
 
+  // Load enrollment khi thay đổi selectedClass
   useEffect(() => {
-    if (selectedClass && semesters.length > 0) {
-      dispatch(getCourseEnrollmentAction(selectedClass, semesters[0].id));
+    if (selectedClass && semester_detail) {
+      dispatch(getCourseEnrollmentAction(selectedClass, semester_detail.id));
     }
-  }, [selectedClass, dispatch, semesters]);
+  }, [selectedClass, dispatch, semester_detail]);
 
+  // Đánh dấu các môn đã đăng ký
   useEffect(() => {
     if (enrollments.length > 0 && courses.length > 0) {
       const registeredIds = enrollments
         .filter((enr) => courses.some((c) => c.course.course_id === enr.id))
         .map((enr) => enr.id);
-
       setSelectedRowKeys(registeredIds);
     }
   }, [enrollments, courses]);
@@ -86,71 +100,17 @@ export default function Enrollment() {
     }));
   }, [enrollments]);
 
-  useEffect(() => {
-    if (enrollments.length > 0 && courses.length > 0) {
-      console.log("=== ENROLLMENTS SAMPLE ===");
-      console.log(enrollments[0]);
-      console.log("=== COURSES SAMPLE ===");
-      console.log(courses);
-      const registeredIds = filteredCourses
-        .filter((enr) => courses.some((c) => c.course.course_id === enr.id))
-        .map((enr) => enr.id);
-
-      setSelectedRowKeys(registeredIds);
-    }
-  }, [enrollments, courses, filteredCourses]);
-
   const columns = [
     { title: "Mã MH", dataIndex: "subject_code", key: "subject_code" },
     { title: "Tên môn học", dataIndex: "subject_name", key: "subject_name" },
-    {
-      title: "Số TC",
-      dataIndex: "credit",
-      key: "credit",
-      align: "center",
-    },
-    {
-      title: "Giảng viên",
-      dataIndex: "teacher_name",
-      key: "teacher_name",
-      align: "center",
-    },
-    {
-      title: "Phòng học",
-      dataIndex: "room_code",
-      key: "room_code",
-      align: "center",
-    },
-    {
-      title: "Thứ",
-      dataIndex: "weekday",
-      key: "weekday",
-      align: "center",
-    },
-    {
-      title: "Tiết bắt đầu",
-      dataIndex: "start_period",
-      key: "start_period",
-      align: "center",
-    },
-    {
-      title: "Ngày bắt đầu",
-      dataIndex: "start_date",
-      key: "start_date",
-      align: "center",
-    },
-    {
-      title: "Ngày kết thúc",
-      dataIndex: "end_date",
-      key: "end_date",
-      align: "center",
-    },
-    {
-      title: "Số lượng",
-      dataIndex: "quantity",
-      key: "quantity",
-      align: "center",
-    },
+    { title: "Số TC", dataIndex: "credit", key: "credit", align: "center" },
+    { title: "Giảng viên", dataIndex: "teacher_name", key: "teacher_name", align: "center" },
+    { title: "Phòng học", dataIndex: "room_code", key: "room_code", align: "center" },
+    { title: "Thứ", dataIndex: "weekday", key: "weekday", align: "center" },
+    { title: "Tiết bắt đầu", dataIndex: "start_period", key: "start_period", align: "center" },
+    { title: "Ngày bắt đầu", dataIndex: "start_date", key: "start_date", align: "center" },
+    { title: "Ngày kết thúc", dataIndex: "end_date", key: "end_date", align: "center" },
+    { title: "Số lượng", dataIndex: "quantity", key: "quantity", align: "center" },
     {
       title: "Còn lại",
       dataIndex: "remaining",
@@ -174,30 +134,26 @@ export default function Enrollment() {
   };
 
   const handleRegister = async () => {
-    const selectedCourses = enrollments.filter((c) =>
-      selectedRowKeys.includes(c.id)
-    );
+    if (!isOpen) return;
+
+    const selectedCourses = enrollments.filter((c) => selectedRowKeys.includes(c.id));
 
     const filteredCourses = selectedCourses.filter(
       (course) => !courses.some((c) => c.course.course_id === course.id)
     );
 
-    if (filteredCourses.length === 0) {
-      return;
-    }
+    if (filteredCourses.length === 0) return;
 
-    // Gọi API đăng ký từng môn
     await Promise.all(
       filteredCourses.map((course) =>
         dispatch(CreateCourseEnrollmentAction(user.user_id, course.id))
       )
     );
 
-    // Sau khi đăng ký xong => load lại danh sách
     await dispatch(
-      getAllCourseByStudentAndSemesterAction(user.user_id, semesters[0].id)
+      getAllCourseByStudentAndSemesterAction(user.user_id, semester_detail.id)
     );
-    await dispatch(getCourseEnrollmentAction(selectedClass, semesters[0].id));
+    await dispatch(getCourseEnrollmentAction(selectedClass, semester_detail.id));
   };
 
   return (
@@ -210,11 +166,19 @@ export default function Enrollment() {
           color: "white",
         }}
         title={
-          <Space>
-            <MdBook style={{ color: "white", fontSize: 20 }} />
-            <span style={{ color: "white", fontWeight: 600 }}>
-              Đăng ký môn học học kỳ 1 - Năm học 2025 - 2026
-            </span>
+          <Space direction="vertical" style={{ width: "100%" }}>
+            <Space>
+              <MdBook style={{ color: "white", fontSize: 20 }} />
+              <span style={{ color: "white", fontWeight: 600 }}>
+                Đăng ký môn học {semester_detail?.semesters} - Năm học {semester_detail?.year}
+              </span>
+            </Space>
+            {semester_detail?.open_date && semester_detail?.close_date && (
+              <Text type={isOpen ? "success" : "danger"}>
+                Thời gian đăng ký: {semester_detail.open_date} → {semester_detail.close_date}{" "}
+                {isOpen ? "(Đang mở)" : "(Đã đóng)"}
+              </Text>
+            )}
           </Space>
         }
         extra={
@@ -245,6 +209,11 @@ export default function Enrollment() {
 
       {/* Table */}
       <Card style={{ borderRadius: 12 }}>
+        {!isOpen && (
+          <Text type="warning" style={{ marginBottom: 16 }}>
+            Hiện tại không nằm trong thời gian đăng ký.
+          </Text>
+        )}
         <Table
           rowSelection={rowSelection}
           columns={columns}
@@ -269,12 +238,11 @@ export default function Enrollment() {
           }}
         >
           <Text>
-            Đã chọn <b>{selectedRowKeys.length}</b> / {filteredCourses.length}{" "}
-            môn học
+            Đã chọn <b>{selectedRowKeys.length}</b> / {filteredCourses.length} môn học
           </Text>
           <Button
             type='primary'
-            disabled={selectedRowKeys.length === 0}
+            disabled={selectedRowKeys.length === 0 || !isOpen}
             icon={<MdCheckBox style={{ fontSize: 18 }} />}
             onClick={handleRegister}
           >

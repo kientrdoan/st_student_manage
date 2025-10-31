@@ -5,7 +5,7 @@ import { Select, Button } from "antd"
 import { MdChevronLeft, MdChevronRight, MdCalendarToday, MdFullscreen } from "react-icons/md"
 import dayjs from "dayjs"
 import { useDispatch, useSelector } from "react-redux"
-import { getAllSemeterAction } from "../redux/actions/SemesterAction"
+import { getAllSemeterAction, getCurrentSemeterAction } from "../redux/actions/SemesterAction"
 import { getAllCourseByStudentAndSemesterAction } from "../redux/actions/CourseAction"
 
 // 🔹 Hàm sinh tuần dựa vào ngày bắt đầu & kết thúc
@@ -63,6 +63,7 @@ export default function TimeTable() {
   const dispatch = useDispatch()
 
   const semesters = useSelector((state) => state.SemesterReducer.semesters)
+  const semester_detail = useSelector((state) => state.SemesterReducer.semester_detail)
   const courses = useSelector((state) => state.CourseReducer.courses)
   const user = useSelector((state) => state.UserReducer.user)
 
@@ -71,24 +72,25 @@ export default function TimeTable() {
 
   console.log("course page", courses)
 
-  // 🔹 Lấy danh sách học kỳ
+  // 🔹 Lấy danh sách học kỳ và học kỳ hiện tại
   useEffect(() => {
     dispatch(getAllSemeterAction())
+    dispatch(getCurrentSemeterAction())
   }, [dispatch])
 
-  // 🔹 Set học kỳ đầu tiên mặc định
+  // ✅ Sửa đúng logic chọn học kỳ hiện tại
   useEffect(() => {
-    if (semesters?.length > 0 && !selectedSemester) {
-      setSelectedSemester(semesters[0].id.toString())
+    if (semester_detail && semester_detail.id && !selectedSemester) {
+      setSelectedSemester(semester_detail.id.toString())
     }
-  }, [semesters, selectedSemester])
+  }, [semester_detail, selectedSemester])
 
   // 🔹 Lấy danh sách môn học theo học kỳ
   useEffect(() => {
     if (selectedSemester && user?.user_id) {
       dispatch(getAllCourseByStudentAndSemesterAction(user.user_id, selectedSemester))
     }
-  }, [dispatch, user.user_id, selectedSemester])
+  }, [dispatch, user?.user_id, selectedSemester])
 
   // 🔹 Chuẩn hóa dữ liệu course trả về từ API
   const normalizedCourses = useMemo(() => {
@@ -106,7 +108,7 @@ export default function TimeTable() {
         },
         teacher: c.teacher,
         room: c.room,
-        time_period: [c.start_period, c.start_period+1, c.start_period+2, c.start_period+3], // tạm demo
+        time_period: [c.start_period, c.start_period + 1, c.start_period + 2, c.start_period + 3], // tạm demo
       }
     })
   }, [courses])
@@ -243,7 +245,6 @@ export default function TimeTable() {
         </div>
       </div>
 
-      {/* Bảng thời khóa biểu */}
       <div
         style={{
           background: "white",

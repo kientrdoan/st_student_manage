@@ -10,29 +10,33 @@ import {
   Select,
   Popconfirm,
 } from "antd";
-
 import {
   SearchOutlined,
   SettingOutlined,
   BookOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
-
 import { useDispatch, useSelector } from "react-redux";
-import { getAllCourseByStudentAndSemesterAction } from "../redux/actions/CourseAction";
-import { getAllSemeterAction } from "../redux/actions/SemesterAction";
+import {
+  getAllCourseByStudentAndSemesterAction,
+} from "../redux/actions/CourseAction";
+import {
+  getAllSemeterAction,
+  getCurrentSemeterAction,
+} from "../redux/actions/SemesterAction";
 import { DeleteCourseEnrollmentAction } from "../redux/actions/EnrollmentAction";
 import { NavLink } from "react-router-dom";
+import dayjs from "dayjs";
 
 export default function ClassSchedule() {
   const user = useSelector((state) => state.UserReducer.user);
   const courses = useSelector((state) => state.CourseReducer.courses);
   const semesters = useSelector((state) => state.SemesterReducer.semesters);
+  const semester_detail = useSelector((state) => state.SemesterReducer.semester_detail);
   const dispatch = useDispatch();
 
   const [searchText, setSearchText] = useState("");
   const [selectedSemester, setSelectedSemester] = useState(null);
-
   const [visibleColumns, setVisibleColumns] = useState({
     id: true,
     subject: true,
@@ -43,28 +47,42 @@ export default function ClassSchedule() {
     action: true,
   });
 
-  // 🔹 Lấy danh sách học kỳ và khóa học
+  // Kiểm tra thời gian đăng ký/xóa
+  const [isOpen, setIsOpen] = useState(false);
+  useEffect(() => {
+    if (semester_detail?.open_date && semester_detail?.close_date) {
+      const now = dayjs();
+      const openDate = dayjs(semester_detail.open_date);
+      const closeDate = dayjs(semester_detail.close_date);
+      setIsOpen(now.isAfter(openDate) && now.isBefore(closeDate.add(1, "day")));
+    }
+  }, [semester_detail]);
+
+  // 🔹 Lấy danh sách học kỳ & học kỳ hiện tại
   useEffect(() => {
     if (!user || !user.user_id) return;
     dispatch(getAllSemeterAction());
-    dispatch(getAllCourseByStudentAndSemesterAction(user.user_id, selectedSemester));
-  }, [dispatch, user, selectedSemester]);
+    dispatch(getCurrentSemeterAction());
+  }, [dispatch, user]);
 
-  // 🔹 Sau khi có danh sách học kỳ → chọn mặc định là học kỳ đầu tiên
+  // 🔹 Khi có học kỳ hiện tại → set làm selectedSemester mặc định
   useEffect(() => {
-    if (semesters.length > 0 && !selectedSemester) {
-      const firstSemester = semesters[0];
-      setSelectedSemester(firstSemester.id);
+    if (semester_detail && semester_detail.id && !selectedSemester) {
+      setSelectedSemester(semester_detail.id);
       if (user?.user_id) {
-        dispatch(getAllCourseByStudentAndSemesterAction(user.user_id, firstSemester.id));
+        dispatch(
+          getAllCourseByStudentAndSemesterAction(user.user_id, semester_detail.id)
+        );
       }
     }
-  }, [semesters, selectedSemester, user, dispatch]);
+  }, [semester_detail, selectedSemester, user, dispatch]);
 
-  // 🔹 Khi chọn học kỳ khác → gọi API tương ứng
+  // 🔹 Khi người dùng chọn học kỳ khác → load lại danh sách khóa học
   useEffect(() => {
     if (selectedSemester && user?.user_id) {
-      dispatch(getAllCourseByStudentAndSemesterAction(user.user_id, selectedSemester));
+      dispatch(
+        getAllCourseByStudentAndSemesterAction(user.user_id, selectedSemester)
+      );
     }
   }, [selectedSemester, user, dispatch]);
 
@@ -88,7 +106,7 @@ export default function ClassSchedule() {
       );
     });
 
-  // 🔹 Bật/tắt cột hiển thị
+  // 🔹 Toggle hiển thị cột
   const toggleColumn = (key) => {
     setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
   };
@@ -107,10 +125,13 @@ export default function ClassSchedule() {
     })),
   };
 
+  // 🔹 Xóa môn học đã đăng ký
   const handleDelete = async (register_id) => {
-    console.log("id", register_id)
-    await dispatch(DeleteCourseEnrollmentAction(user.user_id, register_id))
-    await dispatch(getAllCourseByStudentAndSemesterAction(user.user_id, selectedSemester));
+    if (!isOpen) return; // Không cho xóa ngoài thời gian
+    await dispatch(DeleteCourseEnrollmentAction(user.user_id, register_id));
+    await dispatch(
+      getAllCourseByStudentAndSemesterAction(user.user_id, selectedSemester)
+    );
   };
 
   const allColumns = [
@@ -127,8 +148,11 @@ export default function ClassSchedule() {
       visible: visibleColumns.subject,
       render: (_, record) => (
         <span>
-          <NavLink to="/attend"><Tag color="green"> {record.subject_code} {record.subject_name} </Tag> </NavLink>
-          
+          <NavLink to="/attend">
+            <Tag color="green">
+              {record.subject_code} {record.subject_name}
+            </Tag>
+          </NavLink>
         </span>
       ),
     },
@@ -164,7 +188,7 @@ export default function ClassSchedule() {
       align: "center",
       render: (_, record) => (
         <Popconfirm
-          title="Are you sure you want to delete this course?"
+          title={!isOpen ? "Không thể xóa ngoài thời gian đăng ký" : "Are you sure you want to delete this course?"}
           okText="Yes"
           cancelText="No"
           onConfirm={() => handleDelete(record.id)}
@@ -174,6 +198,7 @@ export default function ClassSchedule() {
             danger
             icon={<DeleteOutlined />}
             size="small"
+            disabled={!isOpen} // Vô hiệu hóa ngoài thời gian
           />
         </Popconfirm>
       ),
@@ -185,7 +210,7 @@ export default function ClassSchedule() {
   return (
     <div className="h-full flex flex-col">
       <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col h-full">
-        {/* 🔹 Header */}
+        {/* Header */}
         <div className="mb-6 flex-shrink-0">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
@@ -198,7 +223,7 @@ export default function ClassSchedule() {
           </div>
         </div>
 
-        {/* 🔹 Thanh công cụ */}
+        {/* Toolbar */}
         <div className="flex items-center justify-between mb-6 gap-4 flex-shrink-0">
           <Space size="middle">
             <Input
@@ -235,7 +260,14 @@ export default function ClassSchedule() {
           </Space>
         </div>
 
-        {/* 🔹 Bảng dữ liệu */}
+        {/* Thông báo thời gian đăng ký */}
+        {!isOpen && (
+          <p style={{ color: "orange", marginBottom: 12 }}>
+            Hiện tại không nằm trong thời gian đăng ký → không thể xóa môn học
+          </p>
+        )}
+
+        {/* Table */}
         <div className="flex-1 overflow-hidden">
           <Table
             columns={columns}
