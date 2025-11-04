@@ -81,17 +81,17 @@ export default function ProfileDetail() {
   return (
     <>
       {contextHolder}
-      <div className='h-full overflow-auto p-6 bg-gray-50'>
+      <div className='h-full overflow-auto bg-gray-50'>
         <div className='max-w-4xl mx-auto'>
           <div className='mb-6'>
-            <Button
+            {/* <Button
               icon={<ArrowLeftOutlined />}
               onClick={() => navigate(-1)}
               className='mb-4'
             >
               Quay lại
-            </Button>
-            <div className='flex items-center gap-4'>
+            </Button> */}
+            {/* <div className='flex items-center gap-4'>
               <div className='w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center'>
                 <UserOutlined className='text-indigo-600 text-3xl' />
               </div>
@@ -103,7 +103,7 @@ export default function ProfileDetail() {
                   Thông tin chi tiết của người dùng.
                 </p>
               </div>
-            </div>
+            </div> */}
           </div>
 
           <Card className='shadow-md border border-gray-200'>
@@ -126,9 +126,9 @@ export default function ProfileDetail() {
               </Row>
 
               {/* --- Phần Thông tin cá nhân --- */}
-              <h3 className='text-lg font-semibold text-gray-900 mt-6 mb-4 pb-2 border-b border-gray-200'>
+              {/* <h3 className='text-lg font-semibold text-gray-900 mt-6 mb-4 pb-2 border-b border-gray-200'>
                 Thông tin cá nhân
-              </h3>
+              </h3> */}
               <Row gutter={24}>
                 <Col span={12}>
                   <Form.Item label='Họ và tên' name='full_name'>

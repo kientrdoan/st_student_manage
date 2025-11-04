@@ -1,36 +1,47 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { Table, Button, Input, Space, Dropdown, Checkbox, Tag } from "antd"
-import { SearchOutlined, SettingOutlined, BookOutlined, PlusOutlined, EditOutlined } from "@ant-design/icons"
+import { SearchOutlined, SettingOutlined, BookOutlined, EditOutlined } from "@ant-design/icons"
 import { Link } from "react-router-dom"
-// import dayjs from "dayjs"
 import { getAllSubjectAction } from "../redux/actions/SubjectAction"
 import { useDispatch, useSelector } from "react-redux"
 
 export default function SubjectList() {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch()
   const [searchText, setSearchText] = useState("")
+
+  const user = useSelector((state) => state.UserReducer.user)
   const subjects = useSelector((state) => state.SubjectReducer.subjects)
+
   const [visibleColumns, setVisibleColumns] = useState({
     code: true,
     name: true,
     credit: true,
     description: true,
     major: true,
+    total_period: true,
   })
 
-  // Giả lập API dữ liệu
   useEffect(() => {
-   dispatch(getAllSubjectAction())
-  }, [])
+    if (user?.user_id) {
+      dispatch(getAllSubjectAction(user.user_id))
+    }
+  }, [user?.user_id, dispatch])
 
-  const filteredData = subjects.filter((item) => {
+  // 🔹 Map lại dữ liệu để hiển thị dễ dàng hơn
+  const mappedSubjects = subjects.map((item) => ({
+    ...item,
+    majorName: item.major?.name || "N/A",
+    description: item.description || null,
+  }))
+
+  // 🔹 Lọc dữ liệu theo từ khóa
+  const filteredData = mappedSubjects.filter((item) => {
     const text = searchText.toLowerCase()
     return (
       item.code.toLowerCase().includes(text) ||
       item.name.toLowerCase().includes(text) ||
-      item.credit.toString().includes(text)
+      item.credit.toString().includes(text) ||
+      item.majorName.toLowerCase().includes(text)
     )
   })
 
@@ -46,15 +57,16 @@ export default function SubjectList() {
       key,
       label: (
         <Checkbox checked={visibleColumns[key]} onChange={() => toggleColumn(key)}>
-          {key.charAt(0).toUpperCase() + key.slice(1)}
+          {key.charAt(0).toUpperCase() + key.slice(1).replace("_", " ")}
         </Checkbox>
       ),
     })),
   }
 
+  // 🔹 Danh sách cột
   const allColumns = [
     {
-      title: "Code",
+      title: "Mã môn",
       dataIndex: "code",
       key: "code",
       visible: visibleColumns.code,
@@ -62,21 +74,28 @@ export default function SubjectList() {
       width: 120,
     },
     {
-      title: "Name",
+      title: "Tên môn",
       dataIndex: "name",
       key: "name",
       visible: visibleColumns.name,
       width: 250,
     },
     {
-      title: "Credit",
+      title: "Tín chỉ",
       dataIndex: "credit",
       key: "credit",
       visible: visibleColumns.credit,
       width: 100,
     },
     {
-      title: "Description",
+      title: "Tổng số tiết",
+      dataIndex: "total_period",
+      key: "total_period",
+      visible: visibleColumns.total_period,
+      width: 130,
+    },
+    {
+      title: "Mô tả",
       dataIndex: "description",
       key: "description",
       visible: visibleColumns.description,
@@ -84,25 +103,12 @@ export default function SubjectList() {
       width: 200,
     },
     {
-      title: "Major",
-      dataIndex: "major",
-      key: "major",
+      title: "Ngành",
+      dataIndex: "majorName",
+      key: "majorName",
       visible: visibleColumns.major,
-      render: (major) => <Tag color="blue">Major #{major}</Tag>,
-      width: 150,
-    },
-    {
-      title: "Action",
-      key: "action",
-      render: (_, record) => (
-        <Link to={`/subjects/detail/${record.code}`}>
-          <Button type="link" icon={<EditOutlined />} className="text-indigo-600">
-            Edit
-          </Button>
-        </Link>
-      ),
-      fixed: "right",
-      width: 100,
+      render: (majorName) => <Tag color="blue">{majorName}</Tag>,
+      width: 200,
     },
   ]
 
@@ -126,12 +132,6 @@ export default function SubjectList() {
 
         {/* Toolbar */}
         <div className="flex items-center justify-between mb-6 gap-4 flex-shrink-0">
-          {/* <Link to="/subjects/detail">
-            <Button type="primary" icon={<PlusOutlined />} size="large" className="shadow-sm">
-              Add Subject
-            </Button>
-          </Link> */}
-
           <Space size="middle">
             <Input
               placeholder="Search subjects..."

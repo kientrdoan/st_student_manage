@@ -20,6 +20,8 @@ import { jwtDecode } from "jwt-decode";
 import { LOGIN_ACTION } from "./redux/types/UserType";
 import Enrollment from "./pages/Enrollment";
 import Attend from "./pages/Attend";
+import Score from "./pages/Score";
+import TimeTableSemester from "./pages/TimeTableSemester";
 
 function App() {
   const dispatch = useDispatch();
@@ -69,8 +71,10 @@ function App() {
             <Route path='enrollments' element={<Enrollment />} />
             <Route path='subjects' element={<Subject />} />
             <Route path='time-tables' element={<TimeTable />} />
+            <Route path='time-tables-semeters' element={<TimeTableSemester />} />
             <Route path='courses' element={<Course />} />
             <Route path='attend' element={<Attend />} />
+            <Route path='scores' element={<Score />} />
           </Route>
         </Route>
 

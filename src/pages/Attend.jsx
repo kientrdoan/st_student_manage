@@ -19,21 +19,20 @@ dayjs.extend(isBetween)
 const CLASS_SCHEDULE = {
   subjectName: "Lập trình Web",
   room: { code: "A305", building: "A" },
-  weekday: 2, // Thứ 2 (1 = CN, 2 = Thứ 2, 3 = Thứ 3,...)
+  weekday: 2,
   startPeriod: 1,
   endPeriod: 3,
   startDate: dayjs("2025-09-01"),
   endDate: dayjs("2025-12-20"),
 }
 
-// 🔧 Sinh danh sách buổi học theo lịch cố định
 function generateAttendanceHistory(schedule) {
   const { startDate, endDate, weekday } = schedule
   const sessions = []
-  let currentDate = startDate.startOf("week") // để duyệt theo tuần
+  let currentDate = startDate.startOf("week")
 
   while (currentDate.isBefore(endDate) || currentDate.isSame(endDate, "day")) {
-    const day = currentDate.day(weekday) // lấy ngày trong tuần tương ứng
+    const day = currentDate.day(weekday)
     if (day.isBetween(startDate, endDate, null, "[]")) {
       const status = Math.random() > 0.1 ? "present" : Math.random() > 0.5 ? "absent" : "late"
       sessions.push({
@@ -70,14 +69,14 @@ export default function Attend() {
   }, [allData, startDate, endDate])
 
   // Tính thống kê
-  const stats = {
-    total: filteredData.length,
-    present: filteredData.filter((i) => i.status === "present").length,
-    absent: filteredData.filter((i) => i.status === "absent").length,
-    late: filteredData.filter((i) => i.status === "late").length,
-  }
+  // const stats = {
+  //   total: filteredData.length,
+  //   present: filteredData.filter((i) => i.status === "present").length,
+  //   absent: filteredData.filter((i) => i.status === "absent").length,
+  //   late: filteredData.filter((i) => i.status === "late").length,
+  // }
 
-  const attendanceRate = stats.total > 0 ? ((stats.present / stats.total) * 100).toFixed(1) : 0
+  // const attendanceRate = stats.total > 0 ? ((stats.present / stats.total) * 100).toFixed(1) : 0
 
   const handleFilter = () => {
     setLoading(true)
@@ -135,7 +134,7 @@ export default function Attend() {
 
   return (
     <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
-      <div style={{ marginBottom: "24px" }}>
+      {/* <div style={{ marginBottom: "24px" }}>
         <h1 style={{ fontSize: "28px", fontWeight: "bold" }}>📋 Lịch sử điểm danh</h1>
         <p style={{ color: "#666" }}>
           Môn học: <b>{CLASS_SCHEDULE.subjectName}</b> – Phòng{" "}
@@ -146,10 +145,10 @@ export default function Attend() {
           {CLASS_SCHEDULE.endPeriod}) | Từ {CLASS_SCHEDULE.startDate.format("DD/MM/YYYY")} đến{" "}
           {CLASS_SCHEDULE.endDate.format("DD/MM/YYYY")}
         </p>
-      </div>
+      </div> */}
 
       {/* Cards thống kê */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+      {/* <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic title="Tổng buổi học" value={stats.total} prefix={<CalendarOutlined />} />
@@ -170,7 +169,7 @@ export default function Attend() {
             <Statistic title="Tỷ lệ có mặt" value={attendanceRate} suffix="%" valueStyle={{ color: "#faad14" }} />
           </Card>
         </Col>
-      </Row>
+      </Row> */}
 
       {/* Bộ lọc */}
       <Card style={{ marginBottom: 24 }}>
@@ -222,11 +221,11 @@ export default function Attend() {
         </Spin>
       </Card>
 
-      <div style={{ marginTop: 24, padding: 16, backgroundColor: "#f5f5f5", borderRadius: 8 }}>
+      {/* <div style={{ marginTop: 24, padding: 16, backgroundColor: "#f5f5f5", borderRadius: 8 }}>
         <p style={{ margin: 0, color: "#666" }}>
           💡 <b>Ghi chú:</b> Lịch học cố định, dữ liệu điểm danh chỉ mang tính mô phỏng.
         </p>
-      </div>
+      </div> */}
     </div>
   )
 }

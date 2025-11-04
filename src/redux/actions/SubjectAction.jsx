@@ -5,10 +5,10 @@ import { GET_ALL_SUBJECT } from "../types/SubjectType";
 
 
 
-export const getAllSubjectAction = () => {
+export const getAllSubjectAction = (user_id) => {
   return async (dispatch) => {
     try {
-      const result = await subjectService.getAllSubject();
+      const result = await subjectService.getAllSubject(user_id);
       if (result.status === 200) {
         dispatch({
           type: GET_ALL_SUBJECT,

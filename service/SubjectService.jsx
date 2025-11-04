@@ -5,8 +5,8 @@ export class SubjectService extends BaseService {
     super();
   }
 
-  getAllSubject = () => {
-    return this.get("/students/subjects");
+  getAllSubject = (user_id) => {
+    return this.get(`/students/subjects/${user_id}`);
   };
 
 }
