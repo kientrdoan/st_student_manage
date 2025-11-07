@@ -73,7 +73,7 @@ function App() {
             <Route path='time-tables' element={<TimeTable />} />
             <Route path='time-tables-semeters' element={<TimeTableSemester />} />
             <Route path='courses' element={<Course />} />
-            <Route path='attend' element={<Attend />} />
+            <Route path='attend/:id' element={<Attend />} />
             <Route path='scores' element={<Score />} />
           </Route>
         </Route>

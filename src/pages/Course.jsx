@@ -148,7 +148,7 @@ export default function ClassSchedule() {
       visible: visibleColumns.subject,
       render: (_, record) => (
         <span>
-          <NavLink to="/attend">
+          <NavLink to={`/attend/${record.id}`}>
             <Tag color="green">
               {record.subject_code} {record.subject_name}
             </Tag>
