@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { MdSettings, MdBook, MdGroup, MdCheckBox } from "react-icons/md";
-import { Table, Select, Button, Tag, Card, Space, Typography } from "antd";
+import { Table, Select, Button, Tag, Card, Space, Typography, message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import {
   CreateCourseEnrollmentAction,
@@ -28,6 +28,8 @@ export default function Enrollment() {
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+
+  const [messageApi, contextHolder] = message.useMessage()
 
   // Kiểm tra thời gian đăng ký
   useEffect(() => {
@@ -154,11 +156,17 @@ export default function Enrollment() {
       getAllCourseByStudentAndSemesterAction(user.user_id, semester_detail.id)
     );
     await dispatch(getCourseEnrollmentAction(selectedClass, semester_detail.id));
+
+    messageApi.open({
+      type: 'success',
+      content: 'Đang ký môn học thành công!',
+    });
   };
 
   return (
     <div>
       {/* Header */}
+      {contextHolder}
       <Card
         style={{ marginBottom: 24, borderRadius: 12 }}
         headStyle={{

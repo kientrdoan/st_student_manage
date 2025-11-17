@@ -35,28 +35,27 @@ function generateAllWeeks(startDate, endDate) {
 }
 
 const DAYS = [
-  { key: 2, label: "Thứ 2" },
-  { key: 3, label: "Thứ 3" },
-  { key: 4, label: "Thứ 4" },
-  { key: 5, label: "Thứ 5" },
-  { key: 6, label: "Thứ 6" },
-  { key: 7, label: "Thứ 7" },
-  { key: 1, label: "Chủ Nhật" },
+  { key: 0, label: "Thứ 2" },
+  { key: 1, label: "Thứ 3" },
+  { key: 2, label: "Thứ 4" },
+  { key: 3, label: "Thứ 5" },
+  { key: 4, label: "Thứ 6" },
+  { key: 5, label: "Thứ 7" },
 ]
 
 const PERIODS = Array.from({ length: 10 }, (_, i) => i + 1)
 
+// 🔹 Map weekday API sang index cột
 function convertWeekday(weekday) {
   const map = {
-    Monday: 2,
-    Tuesday: 3,
-    Wednesday: 4,
-    Thursday: 5,
-    Friday: 6,
-    Saturday: 7,
-    Sunday: 1,
+    Monday: 0,
+    Tuesday: 1,
+    Wednesday: 2,
+    Thursday: 3,
+    Friday: 4,
+    Saturday: 5,
   }
-  return map[weekday] || 2
+  return map[weekday] ?? 0
 }
 
 export default function TimeTable() {
@@ -70,32 +69,35 @@ export default function TimeTable() {
   const [selectedSemester, setSelectedSemester] = useState(null)
   const [selectedWeek, setSelectedWeek] = useState(null)
 
-  console.log("course page", courses)
-
   // 🔹 Lấy danh sách học kỳ và học kỳ hiện tại
   useEffect(() => {
     dispatch(getAllSemeterAction())
     dispatch(getCurrentSemeterAction())
   }, [dispatch])
 
-  // ✅ Sửa đúng logic chọn học kỳ hiện tại
+  // 🔹 Chọn học kỳ mặc định
   useEffect(() => {
-    if (semester_detail && semester_detail.id && !selectedSemester) {
+    if (semester_detail?.id && !selectedSemester) {
       setSelectedSemester(semester_detail.id.toString())
     }
   }, [semester_detail, selectedSemester])
 
-  // 🔹 Lấy danh sách môn học theo học kỳ
+  // 🔹 Lấy danh sách course theo học kỳ
   useEffect(() => {
     if (selectedSemester && user?.user_id) {
       dispatch(getAllCourseByStudentAndSemesterAction(user.user_id, selectedSemester))
     }
   }, [dispatch, user?.user_id, selectedSemester])
 
-  // 🔹 Chuẩn hóa dữ liệu course trả về từ API
+  // 🔹 Chuẩn hóa dữ liệu course
   const normalizedCourses = useMemo(() => {
     return (courses || []).map((item) => {
       const c = item.course
+      // Tính số tiết của course
+      const start = c.start_period
+      const end = start + (c.end_period ? c.end_period - start : 3) // Nếu API có end_period thì dùng
+      const time_period = Array.from({ length: end - start + 1 }, (_, i) => start + i)
+
       return {
         id: c.course_id,
         start_date: c.course_start_date,
@@ -108,18 +110,16 @@ export default function TimeTable() {
         },
         teacher: c.teacher,
         room: c.room,
-        time_period: [c.start_period, c.start_period + 1, c.start_period + 2, c.start_period + 3], // tạm demo
+        time_period,
       }
     })
   }, [courses])
 
-  // 🔹 Sinh danh sách tuần dựa vào ngày bắt đầu & kết thúc của học kỳ được chọn
+  // 🔹 Sinh danh sách tuần
   const weeks = useMemo(() => {
     if (!selectedSemester || semesters.length === 0) return []
-
     const selected = semesters.find((s) => s.id.toString() === selectedSemester)
     if (!selected) return []
-
     return generateAllWeeks(selected.start_date, selected.end_date)
   }, [selectedSemester, semesters])
 
@@ -132,10 +132,9 @@ export default function TimeTable() {
 
   const selectedWeekData = weeks.find((w) => w.value === selectedWeek)
 
-  // 🔹 Lọc các course thuộc tuần đã chọn
+  // 🔹 Lọc courses theo tuần
   const filteredCourses = useMemo(() => {
     if (!selectedWeekData) return []
-
     return normalizedCourses.filter((course) => {
       const courseStart = dayjs(course.start_date)
       const courseEnd = dayjs(course.end_date)
@@ -145,25 +144,24 @@ export default function TimeTable() {
     })
   }, [normalizedCourses, selectedWeekData])
 
-  // 🔹 Map truy cập course theo ngày - tiết
+  // 🔹 Map course theo cell
   const courseMap = useMemo(() => {
     const map = new Map()
     filteredCourses.forEach((course) => {
-      if (course.weekday && course.time_period) {
+      if (course.weekday != null && course.time_period) {
         course.time_period.forEach((period) => {
-          const key = `${course.weekday}-${period}`
-          map.set(key, course)
+          map.set(`${course.weekday}-${period}`, course)
         })
       }
     })
     return map
   }, [filteredCourses])
 
-  // 🔹 Tạo danh sách các cell bị merge (rowSpan)
+  // 🔹 Cells đã merge
   const renderedCells = useMemo(() => {
     const set = new Set()
     filteredCourses.forEach((course) => {
-      if (course.weekday && course.time_period && course.time_period.length > 1) {
+      if (course.weekday != null && course.time_period?.length > 1) {
         for (let i = 1; i < course.time_period.length; i++) {
           set.add(`${course.weekday}-${course.time_period[i]}`)
         }
@@ -175,29 +173,19 @@ export default function TimeTable() {
   const getCourseForCell = (day, period) => courseMap.get(`${day}-${period}`)
 
   const handlePreviousWeek = () => {
-    const currentIndex = weeks.findIndex((w) => w.value === selectedWeek)
-    if (currentIndex > 0) setSelectedWeek(weeks[currentIndex - 1].value)
+    const idx = weeks.findIndex((w) => w.value === selectedWeek)
+    if (idx > 0) setSelectedWeek(weeks[idx - 1].value)
   }
 
   const handleNextWeek = () => {
-    const currentIndex = weeks.findIndex((w) => w.value === selectedWeek)
-    if (currentIndex < weeks.length - 1) setSelectedWeek(weeks[currentIndex + 1].value)
+    const idx = weeks.findIndex((w) => w.value === selectedWeek)
+    if (idx < weeks.length - 1) setSelectedWeek(weeks[idx + 1].value)
   }
 
   return (
     <div style={{ maxWidth: 1600, margin: "0 auto" }}>
       {/* Header */}
-      <div
-        style={{
-          background: "#1890ff",
-          color: "white",
-          padding: "16px",
-          borderRadius: "8px 8px 0 0",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
+      <div style={{ background: "#1890ff", color: "white", padding: 16, borderRadius: "8px 8px 0 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <MdCalendarToday size={24} />
           <h1 style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>THỜI KHÓA BIỂU DẠNG TUẦN</h1>
@@ -206,35 +194,15 @@ export default function TimeTable() {
       </div>
 
       {/* Bộ lọc học kỳ và tuần */}
-      <div
-        style={{
-          background: "white",
-          border: "1px solid #d9d9d9",
-          borderTop: "none",
-          padding: 16,
-        }}
-      >
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-            gap: 16,
-            marginBottom: 16,
-          }}
-        >
+      <div style={{ background: "white", border: "1px solid #d9d9d9", borderTop: "none", padding: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 16, marginBottom: 16 }}>
           <Select
             placeholder="Chọn học kỳ"
             value={selectedSemester}
             onChange={setSelectedSemester}
             style={{ width: "100%" }}
-            options={
-              semesters?.map((item) => ({
-                value: item.id.toString(),
-                label: `${item.semesters} - Năm học ${item.year}`,
-              })) || []
-            }
+            options={semesters?.map((s) => ({ value: s.id.toString(), label: `${s.semesters} - Năm học ${s.year}` })) || []}
           />
-
           <Select
             placeholder="Chọn tuần"
             value={selectedWeek}
@@ -245,168 +213,61 @@ export default function TimeTable() {
         </div>
       </div>
 
-      <div
-        style={{
-          background: "white",
-          border: "1px solid #d9d9d9",
-          borderTop: "none",
-          borderRadius: "0 0 8px 8px",
-          overflow: "hidden",
-        }}
-      >
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ background: "#1890ff", color: "white" }}>
-                <th
-                  style={{
-                    border: "1px solid #40a9ff",
-                    padding: 8,
-                    width: 100,
-                    position: "sticky",
-                    left: 0,
-                    background: "#1890ff",
-                    zIndex: 10,
-                  }}
-                >
-                  <div
-                    onClick={handlePreviousWeek}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      cursor: "pointer",
-                      padding: 4,
-                      borderRadius: 4,
-                    }}
-                  >
-                    <MdChevronLeft size={20} />
-                    <span style={{ fontSize: 14 }}>Trước</span>
-                  </div>
-                </th>
-
-                {DAYS.map((day) => (
-                  <th
-                    key={day.key}
-                    style={{
-                      border: "1px solid #40a9ff",
-                      padding: 12,
-                      minWidth: 140,
-                    }}
-                  >
-                    {day.label}
-                  </th>
-                ))}
-
-                <th
-                  style={{
-                    border: "1px solid #40a9ff",
-                    padding: 8,
-                    width: 100,
-                    position: "sticky",
-                    right: 0,
-                    background: "#1890ff",
-                    zIndex: 10,
-                  }}
-                >
-                  <div
-                    onClick={handleNextWeek}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      cursor: "pointer",
-                      padding: 4,
-                      borderRadius: 4,
-                    }}
-                  >
-                    <span style={{ fontSize: 14 }}>Sau</span>
-                    <MdChevronRight size={20} />
-                  </div>
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {PERIODS.map((period) => (
-                <tr key={period}>
-                  <td
-                    style={{
-                      border: "1px solid #d9d9d9",
-                      padding: 8,
-                      textAlign: "center",
-                      fontWeight: 500,
-                      background: "#1890ff",
-                      color: "white",
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 10,
-                    }}
-                  >
-                    Tiết {period}
-                  </td>
-
-                  {DAYS.map((day) => {
-                    const cellKey = `${day.key}-${period}`
-                    if (renderedCells.has(cellKey)) return null
-
-                    const course = getCourseForCell(day.key, period)
-                    const isFirstPeriod = course && course.time_period && course.time_period[0] === period
-                    let rowSpan = 1
-                    if (course && isFirstPeriod && course.time_period) rowSpan = course.time_period.length
-
-                    return (
-                      <td
-                        key={cellKey}
-                        rowSpan={rowSpan}
-                        style={{
-                          border: "1px solid #d9d9d9",
-                          minHeight: 60 * 4,
-                          verticalAlign: "top",
-                        }}
-                      >
-                        {course && isFirstPeriod && (
-                          <div
-                            style={{
-                              background: "#e6f7ff",
-                              margin: 4,
-                              height: 160,
-                              fontSize: 12,
-                            }}
-                          >
-                            <div style={{ fontWeight: 600, color: "#003a8c" }}>{course.subject.name}</div>
-                            <div style={{ color: "#595959" }}>
-                              <div>Mã: {course.subject.code}</div>
-                              <div>GV: {course.teacher}</div>
-                              <div>Phòng: {course.room}</div>
-                              {/* <div>Lớp: {course.class_st}</div> */}
-                            </div>
-                          </div>
-                        )}
-                      </td>
-                    )
-                  })}
-
-                  <td
-                    style={{
-                      border: "1px solid #d9d9d9",
-                      padding: 8,
-                      textAlign: "center",
-                      fontWeight: 500,
-                      background: "#1890ff",
-                      color: "white",
-                      position: "sticky",
-                      right: 0,
-                      zIndex: 10,
-                    }}
-                  >
-                    Tiết {period}
-                  </td>
-                </tr>
+      {/* Table */}
+      <div style={{ background: "white", border: "1px solid #d9d9d9", borderTop: "none", borderRadius: "0 0 8px 8px", overflow: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ background: "#1890ff", color: "white" }}>
+              <th style={{ border: "1px solid #40a9ff", padding: 8, width: 100, position: "sticky", left: 0, background: "#1890ff", zIndex: 10 }}>
+                <div onClick={handlePreviousWeek} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", padding: 4, borderRadius: 4 }}>
+                  <MdChevronLeft size={20} /><span style={{ fontSize: 14 }}>Trước</span>
+                </div>
+              </th>
+              {DAYS.map((day) => (
+                <th key={day.key} style={{ border: "1px solid #40a9ff", padding: 12, minWidth: 140 }}>{day.label}</th>
               ))}
-            </tbody>
-          </table>
-        </div>
+              <th style={{ border: "1px solid #40a9ff", padding: 8, width: 100, position: "sticky", right: 0, background: "#1890ff", zIndex: 10 }}>
+                <div onClick={handleNextWeek} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", padding: 4, borderRadius: 4 }}>
+                  <span style={{ fontSize: 14 }}>Sau</span><MdChevronRight size={20} />
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {PERIODS.map((period) => (
+              <tr key={period}>
+                <td style={{ border: "1px solid #d9d9d9", padding: 8, textAlign: "center", fontWeight: 500, background: "#1890ff", color: "white", position: "sticky", left: 0, zIndex: 10 }}>
+                  Tiết {period}
+                </td>
+                {DAYS.map((day) => {
+                  const key = `${day.key}-${period}`
+                  if (renderedCells.has(key)) return null
+                  const course = getCourseForCell(day.key, period)
+                  if (!course) return <td key={key} style={{ border: "1px solid #d9d9d9", minHeight: 60 }} />
+                  const isFirstPeriod = course.time_period[0] === period
+                  const rowSpan = isFirstPeriod ? course.time_period.length : 1
+                  return (
+                    <td key={key} rowSpan={rowSpan} style={{ border: "1px solid #d9d9d9", verticalAlign: "top", minHeight: 60 }}>
+                      {isFirstPeriod && (
+                        <div style={{ background: "#e6f7ff", margin: 4, fontSize: 12, padding: 4, height: 150 }}>
+                          <div style={{ fontWeight: 600, color: "#003a8c" }}>{course.subject.name}</div>
+                          <div style={{ color: "#595959" }}>
+                            <div>Mã: {course.subject.code}</div>
+                            <div>GV: {course.teacher}</div>
+                            <div>Phòng: {course.room}</div>
+                          </div>
+                        </div>
+                      )}
+                    </td>
+                  )
+                })}
+                <td style={{ border: "1px solid #d9d9d9", padding: 8, textAlign: "center", fontWeight: 500, background: "#1890ff", color: "white", position: "sticky", right: 0, zIndex: 10 }}>
+                  Tiết {period}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )

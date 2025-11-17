@@ -9,6 +9,7 @@ import {
   Tag,
   Select,
   Popconfirm,
+  message,
 } from "antd";
 import {
   SearchOutlined,
@@ -34,6 +35,7 @@ export default function ClassSchedule() {
   const semesters = useSelector((state) => state.SemesterReducer.semesters);
   const semester_detail = useSelector((state) => state.SemesterReducer.semester_detail);
   const dispatch = useDispatch();
+  const [messageApi, contextHolder] = message.useMessage()
 
   const [searchText, setSearchText] = useState("");
   const [selectedSemester, setSelectedSemester] = useState(null);
@@ -89,7 +91,8 @@ export default function ClassSchedule() {
   // 🔹 Dữ liệu hiển thị sau khi lọc
   const filteredData = courses
     ?.map((item) => ({
-      id: item.id,
+      id: item.id, // id table dang ky
+      course_id: item.course.course_id,
       subject_code: item.course.subject_code,
       subject_name: item.course.subject_name,
       credit: item.course.subject_credit,
@@ -132,6 +135,10 @@ export default function ClassSchedule() {
     await dispatch(
       getAllCourseByStudentAndSemesterAction(user.user_id, selectedSemester)
     );
+    messageApi.open({
+      type: 'success',
+      content: 'Xoá lớp tín chỉ thành công!',
+    });
   };
 
   const allColumns = [
@@ -148,7 +155,7 @@ export default function ClassSchedule() {
       visible: visibleColumns.subject,
       render: (_, record) => (
         <span>
-          <NavLink to={`/attend/${record.id}`}>
+          <NavLink to={`/attend/${record.course_id}`}>
             <Tag color="green">
               {record.subject_code} {record.subject_name}
             </Tag>
@@ -209,6 +216,7 @@ export default function ClassSchedule() {
 
   return (
     <div className="h-full flex flex-col">
+      {contextHolder}
       <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col h-full">
         {/* Header */}
         <div className="mb-6 flex-shrink-0">

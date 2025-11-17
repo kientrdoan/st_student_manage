@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Table, Card, Tag, Spin, Empty } from "antd";
+import { useEffect } from "react";
+import { Table, Card, Tag, Spin, Empty, Button } from "antd";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -10,8 +10,10 @@ import {
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
+
 import { getAllCourseByCourseIdAction } from "../redux/actions/CourseAction";
 import { getAttendByStudentAndCourseAction } from "../redux/actions/AttendAction";
+import { getAllLessonAction } from "../redux/actions/LessonAction";
 
 export default function Attend() {
   const { id: course_id } = useParams();
@@ -19,95 +21,49 @@ export default function Attend() {
 
   const user = useSelector((state) => state.UserReducer.user);
   const attends = useSelector((state) => state.AttendReducer.attends);
-  const course_detail = useSelector(
-    (state) => state.CourseReducer.course_detail
-  );
+  const lessons = useSelector((state) => state.LessonReducer.lessons);
 
-  const [allSessions, setAllSessions] = useState([]);
-
-  // Fetch dữ liệu
+  // ===== FETCH DATA =====
   useEffect(() => {
-    const fetchData = async () => {
-      if (course_id && user?.user_id) {
-        await dispatch(getAllCourseByCourseIdAction(course_id));
-        await dispatch(
-          getAttendByStudentAndCourseAction(user.user_id, course_id)
-        );
-      }
-    };
-    fetchData();
+    if (course_id && user?.user_id) {
+      dispatch(getAllCourseByCourseIdAction(course_id));
+      dispatch(getAttendByStudentAndCourseAction(user.user_id, course_id));
+      dispatch(getAllLessonAction(course_id));
+    }
   }, [course_id, user?.user_id, dispatch]);
 
-  // Sinh danh sách buổi học khi có course_detail
-  useEffect(() => {
-    if (
-      !course_detail?.start_date ||
-      !course_detail?.end_date ||
-      !course_detail?.weekday
-    )
-      return;
+  // ===== MERGE DATA =====
+  const mergedData =
+    lessons?.map((lesson, index) => {
+      const lessonDate = dayjs(lesson.date).format("YYYY-MM-DD");
 
-    const weekdayMap = {
-      Sunday: 0,
-      Monday: 1,
-      Tuesday: 2,
-      Wednesday: 3,
-      Thursday: 4,
-      Friday: 5,
-      Saturday: 6,
-    };
+      const attendRecord = attends?.find(
+        (item) => dayjs(item.date).format("YYYY-MM-DD") === lessonDate
+      );
 
-    const startDate = dayjs(course_detail.start_date);
-    const endDate = dayjs(course_detail.end_date);
-    const weekday = weekdayMap[course_detail.weekday];
+      const status = attendRecord ? attendRecord.status === true : false;
 
-    const sessions = [];
-    let currentDate = startDate;
+      return {
+        key: index + 1,
+        id: lesson.id,
+        date: lessonDate,
+        dayOfWeek: dayjs(lesson.date).format("dddd"),
+        status: status,
+      };
+    }) || [];
 
-    while (currentDate.day() !== weekday) {
-      currentDate = currentDate.add(1, "day");
+  // ======= HANDLE ATTEND =======
+  const handleAttend = (lesson_id, status) => {
+    const payload = {
+      user_id: user.user_id,
+      course_id: course_id,
+      time_slot_id: lesson_id,
+      status: status
     }
+    console.log("Điểm danh cho buổi học:", payload);
+  };
 
-    while (
-      currentDate.isBefore(endDate) ||
-      currentDate.isSame(endDate, "day")
-    ) {
-      sessions.push({
-        date: currentDate.format("YYYY-MM-DD"),
-        dayOfWeek: currentDate.format("dddd"),
-      });
-      currentDate = currentDate.add(1, "week");
-    }
-
-    setAllSessions(sessions);
-  }, [course_detail]);
-
-  // Merge điểm danh
-  const mergedData = allSessions.map((session, index) => {
-    const record = attends?.find(
-      (a) => dayjs(a.date).format("YYYY-MM-DD") === session.date
-    );
-
-    const sessionDate = dayjs(session.date).startOf("day");
-    const today = dayjs().startOf("day");
-
-    let status = "none";
-
-    if (sessionDate.isAfter(today)) {
-      // Buổi học trong tương lai
-      status = "upcoming"; // đổi tên trạng thái riêng
-    } else if (record) {
-      // Có dữ liệu điểm danh
-      if (record.status === "1") status = "present";
-      else if (record.status === "0") status = "absent";
-    } else {
-      // Buổi học đã qua mà không có điểm danh → coi là vắng
-      status = "absent";
-    }
-
-    return { ...session, key: index + 1, status };
-  });
-
+  // ===== COLUMNS =====
   const columns = [
     {
       title: "Ngày học",
@@ -124,28 +80,49 @@ export default function Attend() {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (status) => {
-        let color = "default";
-        let icon = null;
-        let text = "";
+      render: (status, record) => {
+        const today = dayjs().format("YYYY-MM-DD");
+        const lessonDate = record.date;
 
-        if (status === "present") {
-          color = "success";
-          icon = <CheckCircleOutlined />;
-          text = "Có mặt";
-        } else if (status === "absent") {
-          color = "error";
-          icon = <CloseCircleOutlined />;
-          text = "Vắng mặt";
-        } else {
-          color = "default";
-          icon = <ClockCircleOutlined />;
-          text = "Chưa điểm danh";
+        // ========= NGÀY HÔM NAY =========
+        if (lessonDate === today) {
+          if (status === true) {
+            return (
+              <Tag icon={<CheckCircleOutlined />} color="success">
+                Đã điểm danh hôm nay
+              </Tag>
+            );
+          }
+
+          // Chưa điểm danh → hiện Button
+          return (
+            <Button
+              type="primary"
+              icon={<ClockCircleOutlined />}
+              onClick={() => handleAttend(record.id, status= true)}
+            >
+              Điểm danh hôm nay
+            </Button>
+          );
         }
 
+        // ========= QUÁ KHỨ =========
+        if (dayjs(lessonDate).isBefore(today, "day")) {
+          return status ? (
+            <Tag icon={<CheckCircleOutlined />} color="success">
+              Có mặt
+            </Tag>
+          ) : (
+            <Tag icon={<CloseCircleOutlined />} color="error">
+              Vắng mặt
+            </Tag>
+          );
+        }
+
+        // ========= TƯƠNG LAI =========
         return (
-          <Tag icon={icon} color={color}>
-            {text}
+          <Tag icon={<ClockCircleOutlined />} color="default">
+            Chưa diễn ra
           </Tag>
         );
       },
@@ -165,15 +142,14 @@ export default function Attend() {
               columns={columns}
               dataSource={mergedData}
               pagination={{
-                pageSize: 10,
+                pageSize: 15,
                 total: mergedData.length,
                 showTotal: (t) => `Tổng ${t} buổi học`,
               }}
-              scroll={{ x: 600 }}
             />
           ) : (
             <Empty
-              description='Không có dữ liệu điểm danh'
+              description="Không có dữ liệu điểm danh"
               style={{ margin: "48px 0" }}
             />
           )}
