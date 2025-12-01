@@ -6,7 +6,7 @@ export class ScoreService extends BaseService {
   }
 
   getAllScores = (user_id) => {
-    return this.get(`/students/scores/${user_id}`);
+    return this.get_token(`/students/scores/${user_id}`);
   };
 
 }

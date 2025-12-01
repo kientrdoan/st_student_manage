@@ -42,7 +42,7 @@ export default function Login(props) {
           //   localStorage.setItem("refresh_token", refreshToken);
           // }
 
-          navigate("/");
+          navigate("/profile");
         } else {
           messageApi.error("Tài khoản hoặc mật khẩu không đúng!");
         }

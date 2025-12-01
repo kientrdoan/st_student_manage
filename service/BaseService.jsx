@@ -50,4 +50,13 @@ export class BaseService {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem(TOKEN)} //JWT
     });
   };
+
+  put_token = (url, model) => {
+    return Axios({
+      url: `${DOMAIN}${url}`,
+      method: "PUT",
+      data: model,
+      headers: {'Authorization': 'Bearer ' + localStorage.getItem(TOKEN)} //JWT
+    });
+  };
 }

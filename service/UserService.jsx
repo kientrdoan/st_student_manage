@@ -6,7 +6,7 @@ export class UserService extends BaseService {
   }
 
   login = (thongTinDangNhap) => {
-    return this.post("/auths/login", thongTinDangNhap);
+    return this.post_token("/auths/login", thongTinDangNhap);
   };
 
   thayDoiMatKhau = (payload) => {

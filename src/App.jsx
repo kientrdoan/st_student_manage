@@ -66,8 +66,8 @@ function App() {
       <Routes>
         <Route element={<ProtectedRoute />}>
           <Route path='/' element={<HomeTemplate />}>
-            <Route index element={<Home />} />
-            <Route path='profile' element={<Profile />} />
+            <Route index element={<Profile />} />
+            <Route index path='profile' element={<Profile />} />
             <Route path='enrollments' element={<Enrollment />} />
             <Route path='subjects' element={<Subject />} />
             <Route path='time-tables' element={<TimeTable />} />

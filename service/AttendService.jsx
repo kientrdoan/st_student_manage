@@ -6,7 +6,11 @@ export class AttendService extends BaseService {
   }
 
   getAttendByStudentAndCourse = (user_id, course_id) => {
-    return this.get(`/students/attends/${user_id}/${course_id}`);
+    return this.get_token(`/students/attends/${user_id}/${course_id}`);
+  };
+
+  attend = (payload) => {
+    return this.post_token(`/admins/attendance/`, payload);
   };
 
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Table, Card, Tag, Spin, Empty, Button } from "antd";
+import { Table, Card, Tag, Spin, Empty, Button, message, Upload } from "antd";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -12,12 +12,20 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 
 import { getAllCourseByCourseIdAction } from "../redux/actions/CourseAction";
-import { getAttendByStudentAndCourseAction } from "../redux/actions/AttendAction";
+import {
+  AttendAction,
+  getAttendByStudentAndCourseAction,
+} from "../redux/actions/AttendAction";
 import { getAllLessonAction } from "../redux/actions/LessonAction";
+import { AiFillTags } from "react-icons/ai";
 
 export default function Attend() {
   const { id: course_id } = useParams();
   const dispatch = useDispatch();
+  const [messageApi, contextHolder] = message.useMessage();
+
+  // const [openModal, setOpenModal] = useState(false);
+  // const [imageBase64, setImageBase64] = useState("");
 
   const user = useSelector((state) => state.UserReducer.user);
   const attends = useSelector((state) => state.AttendReducer.attends);
@@ -41,7 +49,7 @@ export default function Attend() {
         (item) => dayjs(item.date).format("YYYY-MM-DD") === lessonDate
       );
 
-      const status = attendRecord ? attendRecord.status === true : false;
+      const status = attendRecord ? attendRecord.status : "Absent";
 
       return {
         key: index + 1,
@@ -52,15 +60,29 @@ export default function Attend() {
       };
     }) || [];
 
-  // ======= HANDLE ATTEND =======
-  const handleAttend = (lesson_id, status) => {
-    const payload = {
-      user_id: user.user_id,
-      course_id: course_id,
-      time_slot_id: lesson_id,
-      status: status
+  const lessonMap =
+    lessons?.reduce((acc, l) => {
+      const formatted = dayjs(l.date).format("DD/MM/YYYY");
+      acc[formatted] = l.id;
+      return acc;
+    }, {}) || {};
+
+  const handleAttend = async (lessonId, file) => {
+    const formData = new FormData();
+    formData.append("time_slot_id", lessonId);
+    formData.append("threshold", 0.95);
+    formData.append("image", file);
+
+    const res = await dispatch(AttendAction(formData));
+
+    if (res.success) {
+      console.log(res.data);
+      // setImageBase64(res.data.visualized_image);
+      // dispatch(getAttendByCourseId(course_id));
+      messageApi.success("Điểm danh thành công");
+    } else {
+      messageApi.error("Dữ liệu không hợp lệ");
     }
-    console.log("Điểm danh cho buổi học:", payload);
   };
 
   // ===== COLUMNS =====
@@ -85,52 +107,76 @@ export default function Attend() {
         const lessonDate = record.date;
 
         // ========= NGÀY HÔM NAY =========
+
         if (lessonDate === today) {
-          if (status === true) {
+          if (status === "Present") {
             return (
-              <Tag icon={<CheckCircleOutlined />} color="success">
-                Đã điểm danh hôm nay
+              <Tag icon={<CheckCircleOutlined />} color='success'>
+                Có mặt
               </Tag>
             );
+          } else if (status === "Pending") {
+            {
+              return (
+                <Tag icon={<AiFillTags />} color='error'>
+                  Đã gửi yêu cầu
+                </Tag>
+              );
+            }
           }
 
           // Chưa điểm danh → hiện Button
           return (
-            <Button
-              type="primary"
-              icon={<ClockCircleOutlined />}
-              onClick={() => handleAttend(record.id, status= true)}
+            <Upload
+              accept='image/*'
+              showUploadList={false}
+              beforeUpload={(file) => {
+                const today = dayjs().format("DD/MM/YYYY");
+                const lessonId = lessonMap[today];
+
+                if (!lessonId) {
+                  messageApi.error("Hôm nay không có buổi học!");
+                  return Upload.LIST_IGNORE;
+                }
+
+                handleAttend(lessonId, file);
+                return Upload.LIST_IGNORE; // ngăn hiển thị file
+              }}
             >
-              Điểm danh hôm nay
-            </Button>
+              <Button type='primary'>
+                Điểm danh: {dayjs().format("DD/MM/YYYY")}
+              </Button>
+            </Upload>
           );
         }
 
         // ========= QUÁ KHỨ =========
-        if (dayjs(lessonDate).isBefore(today, "day")) {
-          return status ? (
-            <Tag icon={<CheckCircleOutlined />} color="success">
-              Có mặt
-            </Tag>
-          ) : (
-            <Tag icon={<CloseCircleOutlined />} color="error">
-              Vắng mặt
-            </Tag>
-          );
-        }
-
-        // ========= TƯƠNG LAI =========
-        return (
-          <Tag icon={<ClockCircleOutlined />} color="default">
-            Chưa diễn ra
+        console.log("status", status);
+        // if (dayjs(lessonDate).isBefore(today, "day")) {
+        return status == "Present" ? (
+          <Tag icon={<CheckCircleOutlined />} color='success'>
+            Có mặt
+          </Tag>
+        ) : (
+          <Tag icon={<CloseCircleOutlined />} color='error'>
+            Vắng mặt
           </Tag>
         );
+        // }
+
+        // ========= TƯƠNG LAI =========
+        // return (
+        //   <Tag icon={<ClockCircleOutlined />} color="default">
+        //     Chưa diễn ra
+        //   </Tag>
+        // );
       },
     },
   ];
 
   return (
     <div style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
+      {contextHolder}
       <h1 style={{ fontSize: "24px", fontWeight: 600, marginBottom: 16 }}>
         📋 Lịch sử điểm danh
       </h1>
@@ -149,7 +195,7 @@ export default function Attend() {
             />
           ) : (
             <Empty
-              description="Không có dữ liệu điểm danh"
+              description='Không có dữ liệu điểm danh'
               style={{ margin: "48px 0" }}
             />
           )}
