@@ -54,13 +54,13 @@ export default function Score() {
         diemGK: mid_score ?? "—",
         diemCK: final_score ?? "—",
         ketQua: final_score
-          ? final_score >= 8.5
+          ? final_score >= 9
             ? "A+"
-            : final_score >= 8
+            : final_score >= 8.5
             ? "A"
-            : final_score >= 7
+            : final_score >= 8
             ? "B+"
-            : final_score >= 6
+            : final_score >= 7
             ? "B"
             : final_score >= 5
             ? "C"
