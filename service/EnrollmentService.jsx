@@ -10,11 +10,11 @@ export class EnrollmentService extends BaseService {
   };
 
   enrollment = (user_id, course_id) => {
-    return this.post_token(`/students/create-enrollments/${user_id}/${course_id}/`)
+    return this.post_token(`/students/create-enrollments/${user_id}/${course_id}`)
   };
 
   deleteEnrollment = (user_id, register_id) => {
-    return this.delete(`/students/delete-enrollments/${user_id}/${register_id}/`)
+    return this.delete(`/students/delete-enrollments/${user_id}/${register_id}`)
   }
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Table, Card, Tag, Spin, Empty, Button, message, Upload } from "antd";
 import {
   CheckCircleOutlined,
@@ -23,6 +23,7 @@ export default function Attend() {
   const { id: course_id } = useParams();
   const dispatch = useDispatch();
   const [messageApi, contextHolder] = message.useMessage();
+  const [loadingUpload, setLoadingUpload] = useState(false);
 
   // const [openModal, setOpenModal] = useState(false);
   // const [imageBase64, setImageBase64] = useState("");
@@ -68,6 +69,7 @@ export default function Attend() {
     }, {}) || {};
 
   const handleAttend = async (lessonId, file) => {
+    setLoadingUpload(true);   // bật loading
     const formData = new FormData();
     formData.append("time_slot_id", lessonId);
     formData.append("student_id", user.user_id);
@@ -76,10 +78,12 @@ export default function Attend() {
 
     const res = await dispatch(AttendAction(formData));
 
+    setLoadingUpload(false);
+
     if (res.success) {
       console.log(res.data);
       // setImageBase64(res.data.visualized_image);
-      // dispatch(getAttendByCourseId(course_id));
+      dispatch(getAttendByStudentAndCourseAction(user.user_id, course_id));
       messageApi.success("Điểm danh thành công");
     } else {
       messageApi.error("Dữ liệu không hợp lệ");
@@ -183,7 +187,7 @@ export default function Attend() {
       </h1>
 
       <Card>
-        <Spin spinning={false}>
+        <Spin spinning={loadingUpload}>
           {mergedData.length > 0 ? (
             <Table
               columns={columns}
