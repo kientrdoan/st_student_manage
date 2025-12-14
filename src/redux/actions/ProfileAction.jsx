@@ -21,10 +21,10 @@ export const getDetailStudentByUserIdAction = (id) => {
   };
 };
 
-export const editInfoStudentByUserIdAction = (id) => {
+export const editInfoStudentByUserIdAction = (id, payload) => {
   return async (dispatch) => {
     try {
-      const result = await profileService.editInfoTeacherByUserId(id);
+      const result = await profileService.editInfoStudentByUserId(id, payload);
       if (result.status === 200) {
         return { success: true, data: result.data.data };
       }

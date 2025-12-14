@@ -15,11 +15,16 @@ import {
   DatePicker,
   Spin,
   message,
+  Space,
+  Button,
 } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
-import { getDetailStudentByUserIdAction } from "../redux/actions/ProfileAction";
+import {
+  editInfoStudentByUserIdAction,
+  getDetailStudentByUserIdAction,
+} from "../redux/actions/ProfileAction";
 
 export default function ProfileDetail() {
   const [form] = Form.useForm();
@@ -79,13 +84,30 @@ export default function ProfileDetail() {
     fetchProfileData();
   }, [dispatch, form, navigate, messageApi, user.user_id]);
 
-  // if (loading) {
-  //   return (
-  //     <div className='flex justify-center items-center h-full'>
-  //       <Spin size='large' />
-  //     </div>
-  //   );
-  // }
+  const handleSubmit = async (values) => {
+    const payload = {
+      student_code: values.student_code,
+      user: {
+        email: values.email,
+        first_name: values.first_name,
+        last_name: values.last_name,
+        phone: values.phone,
+        address: values.address,
+        identity_number: values.identity_number,
+        birthday: values.birthday ? values.birthday.format("YYYY-MM-DD") : null,
+        gender: values.gender === "Nam" ? "M" : "F",
+        password: "12345",
+        role: "STUDENT",
+        is_active: true,
+      },
+    };
+    console.log("Submit payload:", payload);
+    const result = await dispatch(editInfoStudentByUserIdAction(user.user_id, payload));
+    if (result.success) {
+      dispatch(getDetailStudentByUserIdAction(user.user_id));
+      messageApi.success("Cập nhật thông tin thành công");
+    }
+  };
 
   return (
     <>
@@ -106,6 +128,7 @@ export default function ProfileDetail() {
               <Form
                 form={form}
                 layout='vertical'
+                onFinish={handleSubmit}
                 style={{ flex: 1, marginLeft: 30 }}
               >
                 <h3 className='text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200'>
@@ -141,12 +164,12 @@ export default function ProfileDetail() {
                 <Row gutter={24}>
                   <Col span={12}>
                     <Form.Item label='Số điện thoại' name='phone'>
-                      <Input readOnly size='large' />
+                      <Input size='large' />
                     </Form.Item>
                   </Col>
                   <Col span={12}>
                     <Form.Item label='Số CCCD/CMND' name='identity_number'>
-                      <Input readOnly size='large' />
+                      <Input size='large' />
                     </Form.Item>
                   </Col>
                 </Row>
@@ -158,13 +181,12 @@ export default function ProfileDetail() {
                         style={{ width: "100%" }}
                         format='DD/MM/YYYY'
                         size='large'
-                        disabled
                       />
                     </Form.Item>
                   </Col>
                   <Col span={12}>
                     <Form.Item label='Giới tính' name='gender'>
-                      <Select size='large' disabled>
+                      <Select size='large'>
                         <Select.Option value='M'>Nam</Select.Option>
                         <Select.Option value='F'>Nữ</Select.Option>
                         <Select.Option value='O'>Khác</Select.Option>
@@ -174,7 +196,21 @@ export default function ProfileDetail() {
                 </Row>
 
                 <Form.Item label='Địa chỉ' name='address'>
-                  <Input.TextArea rows={3} readOnly />
+                  <Input.TextArea rows={3} />
+                </Form.Item>
+
+                <Form.Item className='mb-0'>
+                  <Space size='middle'>
+                    <Button type='primary' htmlType='submit' size='large'>
+                      Save
+                    </Button>
+                    <Button
+                      size='large'
+                      onClick={() => navigate("/time-table-semester")}
+                    >
+                      Cancel
+                    </Button>
+                  </Space>
                 </Form.Item>
               </Form>
             </div>
