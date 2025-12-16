@@ -14,7 +14,7 @@ export class EnrollmentService extends BaseService {
   };
 
   deleteEnrollment = (user_id, register_id) => {
-    return this.delete(`/students/delete-enrollments/${user_id}/${register_id}`)
+    return this.delete_token(`/students/delete-enrollments/${user_id}/${register_id}`)
   }
 }
 

@@ -10,7 +10,7 @@ export class ProfileService extends BaseService {
     };
 
     editInfoStudentByUserId = (id, payload) => {
-    return this.put(`/students/profile/${id}`, payload)
+    return this.put_token(`/students/profile/${id}`, payload)
   }
 
 }
