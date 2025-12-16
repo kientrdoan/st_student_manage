@@ -69,11 +69,11 @@ export default function Attend() {
     }, {}) || {};
 
   const handleAttend = async (lessonId, file) => {
-    setLoadingUpload(true);   // bật loading
+    setLoadingUpload(true); // bật loading
     const formData = new FormData();
     formData.append("time_slot_id", lessonId);
     formData.append("student_id", user.user_id);
-    formData.append("course_id", course_id)
+    formData.append("course_id", course_id);
     formData.append("image", file);
 
     const res = await dispatch(AttendAction(formData));
@@ -92,6 +92,13 @@ export default function Attend() {
 
   // ===== COLUMNS =====
   const columns = [
+    {
+      title: "STT",
+      width: 60,
+      align: "center",
+      fixed: "left",
+      render: (_, __, index) => index + 1,
+    },
     {
       title: "Ngày học",
       dataIndex: "date",

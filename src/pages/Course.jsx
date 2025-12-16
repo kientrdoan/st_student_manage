@@ -18,9 +18,7 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  getAllCourseByStudentAndSemesterAction,
-} from "../redux/actions/CourseAction";
+import { getAllCourseByStudentAndSemesterAction } from "../redux/actions/CourseAction";
 import {
   getAllSemeterAction,
   getCurrentSemeterAction,
@@ -29,18 +27,31 @@ import { DeleteCourseEnrollmentAction } from "../redux/actions/EnrollmentAction"
 import { NavLink } from "react-router-dom";
 import dayjs from "dayjs";
 
+const columnLabels = {
+  // id: true,
+  stt: "STT",
+  subject: "Tên môn",
+  credit: "Số tín chỉ",
+  start_date: "Ngày bắt đầu",
+  end_date: "Ngày kết thúc",
+  weekday: "Thứ",
+};
+
 export default function ClassSchedule() {
   const user = useSelector((state) => state.UserReducer.user);
   const courses = useSelector((state) => state.CourseReducer.courses);
   const semesters = useSelector((state) => state.SemesterReducer.semesters);
-  const semester_detail = useSelector((state) => state.SemesterReducer.semester_detail);
+  const semester_detail = useSelector(
+    (state) => state.SemesterReducer.semester_detail
+  );
   const dispatch = useDispatch();
-  const [messageApi, contextHolder] = message.useMessage()
+  const [messageApi, contextHolder] = message.useMessage();
 
   const [searchText, setSearchText] = useState("");
   const [selectedSemester, setSelectedSemester] = useState(null);
   const [visibleColumns, setVisibleColumns] = useState({
-    id: true,
+    // id: true,
+    stt: true,
     subject: true,
     credit: true,
     start_date: true,
@@ -73,7 +84,10 @@ export default function ClassSchedule() {
       setSelectedSemester(semester_detail.id);
       if (user?.user_id) {
         dispatch(
-          getAllCourseByStudentAndSemesterAction(user.user_id, semester_detail.id)
+          getAllCourseByStudentAndSemesterAction(
+            user.user_id,
+            semester_detail.id
+          )
         );
       }
     }
@@ -122,7 +136,7 @@ export default function ClassSchedule() {
           checked={visibleColumns[key]}
           onChange={() => toggleColumn(key)}
         >
-          {key.replace("_", " ").toUpperCase()}
+          {columnLabels[key] || key}
         </Checkbox>
       ),
     })),
@@ -136,18 +150,27 @@ export default function ClassSchedule() {
       getAllCourseByStudentAndSemesterAction(user.user_id, selectedSemester)
     );
     messageApi.open({
-      type: 'success',
-      content: 'Xoá lớp tín chỉ thành công!',
+      type: "success",
+      content: "Xoá lớp tín chỉ thành công!",
     });
   };
 
   const allColumns = [
+    // {
+    //   title: "ID",
+    //   dataIndex: "id",
+    //   key: "id",
+    //   visible: visibleColumns.id,
+    //   width: 80,
+    // },
+
     {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-      visible: visibleColumns.id,
-      width: 80,
+      title: "STT",
+      width: 60,
+      align: "center",
+      fixed: "left",
+      visible: visibleColumns.stt,
+      render: (_, __, index) => index + 1,
     },
     {
       title: "Subject",
@@ -156,7 +179,7 @@ export default function ClassSchedule() {
       render: (_, record) => (
         <span>
           <NavLink to={`/attend/${record.course_id}`}>
-            <Tag color="green">
+            <Tag color='green'>
               {record.subject_code} {record.subject_name}
             </Tag>
           </NavLink>
@@ -195,16 +218,20 @@ export default function ClassSchedule() {
       align: "center",
       render: (_, record) => (
         <Popconfirm
-          title={!isOpen ? "Không thể xóa ngoài thời gian đăng ký" : "Are you sure you want to delete this course?"}
-          okText="Yes"
-          cancelText="No"
+          title={
+            !isOpen
+              ? "Không thể xóa ngoài thời gian đăng ký"
+              : "Are you sure you want to delete this course?"
+          }
+          okText='Yes'
+          cancelText='No'
           onConfirm={() => handleDelete(record.id)}
         >
           <Button
-            type="text"
+            type='text'
             danger
             icon={<DeleteOutlined />}
-            size="small"
+            size='small'
             disabled={!isOpen} // Vô hiệu hóa ngoài thời gian
           />
         </Popconfirm>
@@ -215,38 +242,42 @@ export default function ClassSchedule() {
   const columns = allColumns.filter((col) => col.visible);
 
   return (
-    <div className="h-full flex flex-col">
+    <div className='h-full flex flex-col'>
       {contextHolder}
-      <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col h-full">
+      <div className='bg-white rounded-xl shadow-sm p-6 flex flex-col h-full'>
         {/* Header */}
-        <div className="mb-6 flex-shrink-0">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-              <BookOutlined className="text-indigo-600 text-lg" />
+        <div className='mb-6 flex-shrink-0'>
+          <div className='flex items-center gap-3 mb-2'>
+            <div className='w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center'>
+              <BookOutlined className='text-indigo-600 text-lg' />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Class Schedule</h1>
-              <p className="text-sm text-gray-500">Manage and view class schedules</p>
+              <h1 className='text-2xl font-bold text-gray-900'>
+                Class Schedule
+              </h1>
+              <p className='text-sm text-gray-500'>
+                Manage and view class schedules
+              </p>
             </div>
           </div>
         </div>
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between mb-6 gap-4 flex-shrink-0">
-          <Space size="middle">
+        <div className='flex items-center justify-between mb-6 gap-4 flex-shrink-0'>
+          <Space size='middle'>
             <Input
-              placeholder="Search by subject name or code..."
-              prefix={<SearchOutlined className="text-gray-400" />}
+              placeholder='Search by subject name or code...'
+              prefix={<SearchOutlined className='text-gray-400' />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               style={{ width: 280 }}
-              size="large"
+              size='large'
               allowClear
-              className="rounded-lg"
+              className='rounded-lg'
             />
             <Select
-              placeholder="Select semester"
-              size="large"
+              placeholder='Select semester'
+              size='large'
               allowClear
               value={selectedSemester}
               onChange={(value) => setSelectedSemester(value)}
@@ -259,8 +290,8 @@ export default function ClassSchedule() {
             <Dropdown menu={columnMenu} trigger={["click"]}>
               <Button
                 icon={<SettingOutlined />}
-                size="large"
-                className="rounded-lg"
+                size='large'
+                className='rounded-lg'
               >
                 Columns
               </Button>
@@ -276,11 +307,11 @@ export default function ClassSchedule() {
         )}
 
         {/* Table */}
-        <div className="flex-1 overflow-hidden">
+        <div className='flex-1 overflow-hidden'>
           <Table
             columns={columns}
             dataSource={filteredData}
-            rowKey="id"
+            rowKey='id'
             bordered
             pagination={{
               pageSize: 10,
