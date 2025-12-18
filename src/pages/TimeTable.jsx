@@ -95,7 +95,7 @@ export default function TimeTable() {
       const c = item.course
       // Tính số tiết của course
       const start = c.start_period
-      const end = start + (c.end_period ? c.end_period - start : 3) // Nếu API có end_period thì dùng
+      const end = start + (c.end_period ? c.end_period - start : 4) // Nếu API có end_period thì dùng
       const time_period = Array.from({ length: end - start + 1 }, (_, i) => start + i)
 
       return {
@@ -249,7 +249,7 @@ export default function TimeTable() {
                   return (
                     <td key={key} rowSpan={rowSpan} style={{ border: "1px solid #d9d9d9", verticalAlign: "top", minHeight: 60 }}>
                       {isFirstPeriod && (
-                        <div style={{ background: "#e6f7ff", margin: 4, fontSize: 12, padding: 4, height: 150 }}>
+                        <div style={{ background: "#e6f7ff", margin: 4, fontSize: 12, padding: 4, height: 195 }}>
                           <div style={{ fontWeight: 600, color: "#003a8c" }}>{course.subject.name}</div>
                           <div style={{ color: "#595959" }}>
                             <div>Mã: {course.subject.code}</div>
