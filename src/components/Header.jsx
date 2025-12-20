@@ -9,7 +9,7 @@ export default function Header() {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  const user = useSelector((state)=> state.UserReducer.user)
+  const user = useSelector((state) => state.UserReducer.user);
 
   // Đóng dropdown khi click ra ngoài
   useEffect(() => {
@@ -24,31 +24,31 @@ export default function Header() {
 
   // Hàm xử lý đăng xuất
   const handleLogout = () => {
-    localStorage.removeItem(TOKEN); 
-    navigate("/login"); 
+    localStorage.removeItem(TOKEN);
+    navigate("/login");
   };
 
   return (
-    <header className="flex items-center justify-between bg-white px-6 h-16 flex-shrink-0 shadow-sm border-b border-gray-200">
-      <div className="flex items-center">
-        <h2 className="text-lg font-semibold text-gray-800">Dashboard</h2>
+    <header className='flex items-center justify-between bg-white px-6 h-16 flex-shrink-0 shadow-sm border-b border-gray-200'>
+      <div className='flex items-center'>
+        <h2 className='text-lg font-semibold text-gray-800'>Dashboard</h2>
       </div>
 
-      <div className="relative" ref={dropdownRef}>
+      <div className='relative' ref={dropdownRef}>
         <div
           onClick={() => setOpen(!open)}
-          className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors"
+          className='flex items-center space-x-2 cursor-pointer hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors'
         >
-          <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center">
-            <FiUser className="text-white text-sm" />
+          <div className='w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center'>
+            <FiUser className='text-white text-sm' />
           </div>
-          <span className="text-gray-700 text-sm font-medium">{user.name}</span>
+          <span className='text-gray-700 text-sm font-medium'>{user.name}</span>
         </div>
 
         {open && (
-          <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50">
+          <div className='absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50'>
             <button
-              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100'
               onClick={() => {
                 setOpen(false);
                 // Điều hướng sang trang thông tin (nếu có)
@@ -57,8 +57,20 @@ export default function Header() {
             >
               Thông tin
             </button>
+
             <button
-              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+              className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100'
+              onClick={() => {
+                setOpen(false);
+                // Điều hướng sang trang thông tin (nếu có)
+                navigate("/password");
+              }}
+            >
+              Đổi mật khẩu
+            </button>
+
+            <button
+              className='w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100'
               onClick={() => {
                 setOpen(false);
                 handleLogout();

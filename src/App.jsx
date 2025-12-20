@@ -22,6 +22,7 @@ import Enrollment from "./pages/Enrollment";
 import Attend from "./pages/Attend";
 import Score from "./pages/Score";
 import TimeTableSemester from "./pages/TimeTableSemester";
+import Password from "./pages/Password";
 
 function App() {
   const dispatch = useDispatch();
@@ -68,6 +69,7 @@ function App() {
           <Route path='/' element={<HomeTemplate />}>
             <Route index element={<Profile />} />
             <Route index path='profile' element={<Profile />} />
+            <Route path="password" element={<Password />} />
             <Route path='enrollments' element={<Enrollment />} />
             <Route path='subjects' element={<Subject />} />
             <Route path='time-tables' element={<TimeTable />} />
