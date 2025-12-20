@@ -37,6 +37,16 @@ const columnLabels = {
   weekday: "Thứ",
 };
 
+const weekdayLabels = {
+  Monday: "Thứ 2",
+  Tuesday: "Thứ 3",
+  Wednesday: "Thứ 4",
+  Thusday: "Thứ 5",
+  Friday: "Thứ 6",
+  Saturday: "Thứ 7",
+  Sunday: "Chủ nhật",
+};
+
 export default function ClassSchedule() {
   const user = useSelector((state) => state.UserReducer.user);
   const courses = useSelector((state) => state.CourseReducer.courses);
@@ -173,7 +183,7 @@ export default function ClassSchedule() {
       render: (_, __, index) => index + 1,
     },
     {
-      title: "Subject",
+      title: "Tên môn",
       key: "subject",
       visible: visibleColumns.subject,
       render: (_, record) => (
@@ -187,29 +197,33 @@ export default function ClassSchedule() {
       ),
     },
     {
-      title: "Credit",
+      title: "Tín chỉ",
       dataIndex: "credit",
       key: "credit",
       visible: visibleColumns.credit,
       width: 100,
     },
     {
-      title: "Start Date",
+      title: "Ngày bắt đầu",
       dataIndex: "start_date",
       key: "start_date",
       visible: visibleColumns.start_date,
     },
     {
-      title: "End Date",
+      title: "Ngày kết thúc",
       dataIndex: "end_date",
       key: "end_date",
       visible: visibleColumns.end_date,
     },
     {
-      title: "Weekday",
+      title: "Thứ",
       dataIndex: "weekday",
       key: "weekday",
       visible: visibleColumns.weekday,
+      render: (weekday) => {
+        const key = weekday;
+        return weekdayLabels[key] || "N/A";
+      },
     },
     {
       title: "Action",
@@ -266,7 +280,7 @@ export default function ClassSchedule() {
         <div className='flex items-center justify-between mb-6 gap-4 flex-shrink-0'>
           <Space size='middle'>
             <Input
-              placeholder='Search by subject name or code...'
+              placeholder='Tìm kiếm tên, mã môn...'
               prefix={<SearchOutlined className='text-gray-400' />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}

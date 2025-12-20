@@ -19,6 +19,16 @@ import {
 import { getAllLessonAction } from "../redux/actions/LessonAction";
 import { AiFillTags } from "react-icons/ai";
 
+const weekdayLabels = {
+  Monday: "Thứ 2",
+  Tuesday: "Thứ 3",
+  Wednesday: "Thứ 4",
+  Thusday: "Thứ 5",
+  Friday: "Thứ 6",
+  Saturday: "Thứ 7",
+  Sunday: "Chủ nhật",
+};
+
 export default function Attend() {
   const { id: course_id } = useParams();
   const dispatch = useDispatch();
@@ -109,6 +119,10 @@ export default function Attend() {
       title: "Thứ",
       dataIndex: "dayOfWeek",
       key: "dayOfWeek",
+      render: (weekday) => {
+        const key = weekday;
+        return weekdayLabels[key] || "N/A";
+      },
     },
     {
       title: "Trạng thái",

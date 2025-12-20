@@ -128,7 +128,7 @@ export default function SubjectList() {
       key: "description",
       visible: visibleColumns.description,
       render: (desc) =>
-        desc || <span className='text-gray-400 italic'>No description</span>,
+        desc || <span className='text-gray-400 italic'>Không có mô tả</span>,
       width: 200,
     },
     {
@@ -165,7 +165,7 @@ export default function SubjectList() {
         <div className='flex items-center justify-between mb-6 gap-4 flex-shrink-0'>
           <Space size='middle'>
             <Input
-              placeholder='Search subjects...'
+              placeholder='Tìm kiếm môn học...'
               prefix={<SearchOutlined className='text-gray-400' />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
