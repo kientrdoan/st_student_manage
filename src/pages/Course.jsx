@@ -267,10 +267,10 @@ export default function ClassSchedule() {
             </div>
             <div>
               <h1 className='text-2xl font-bold text-gray-900'>
-                Class Schedule
+                Lớp tín chỉ
               </h1>
               <p className='text-sm text-gray-500'>
-                Manage and view class schedules
+                Quản lý thông tin lớp tín chỉ
               </p>
             </div>
           </div>

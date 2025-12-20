@@ -43,6 +43,16 @@ export default function Score() {
         mapData[year][semName] = [];
       }
 
+      const hasAllScores =
+        attendance_score != null &&
+        exercise_score != null &&
+        mid_score != null &&
+        final_score != null;
+
+      const sum = hasAllScores
+        ? (attendance_score + exercise_score + mid_score + final_score) / 4
+        : null;
+
       mapData[year][semName].push({
         key: item.id,
         stt: mapData[year][semName].length + 1,
@@ -53,19 +63,20 @@ export default function Score() {
         diemBT: exercise_score ?? "—", // Điểm bài tập
         diemGK: mid_score ?? "—",
         diemCK: final_score ?? "—",
-        ketQua: final_score
-          ? final_score >= 9
-            ? "A+"
-            : final_score >= 8.5
-            ? "A"
-            : final_score >= 8
-            ? "B+"
-            : final_score >= 7
-            ? "B"
-            : final_score >= 5
-            ? "C"
-            : "F"
-          : null,
+        ketQua:
+          sum != null
+            ? sum >= 9
+              ? "A+"
+              : sum >= 8.5
+              ? "A"
+              : sum >= 8
+              ? "B+"
+              : sum >= 7
+              ? "B"
+              : sum >= 5
+              ? "C"
+              : "F"
+            : null,
       });
     });
 

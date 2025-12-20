@@ -220,7 +220,7 @@ export default function Enrollment() {
 
     messageApi.open({
       type: "success",
-      content: "Đang ký môn học thành công!",
+      content: "Đăng ký môn học thành công!",
     });
   };
 
