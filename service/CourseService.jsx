@@ -11,7 +11,7 @@ export class CourseService extends BaseService {
   };
 
   getCourseByCourseId = (course_id) => {
-    return this.get_token(`/students/courses/${course_id}/`);
+    return this.get_token(`/students/courses/${course_id}`);
   };
 }
 

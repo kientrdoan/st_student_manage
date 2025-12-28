@@ -17,7 +17,7 @@ import {
   getAttendByStudentAndCourseAction,
 } from "../redux/actions/AttendAction";
 import { getAllLessonAction } from "../redux/actions/LessonAction";
-import { AiFillTags } from "react-icons/ai";
+import { AiFillAlert, AiFillTags } from "react-icons/ai";
 
 const weekdayLabels = {
   Monday: "Thứ 2",
@@ -66,6 +66,7 @@ export default function Attend() {
         key: index + 1,
         id: lesson.id,
         date: lessonDate,
+        isOpen: lesson.is_open,
         dayOfWeek: dayjs(lesson.date).format("dddd"),
         status: status,
       };
@@ -158,30 +159,38 @@ export default function Attend() {
               </Tag>
             );
           }
-
+          console.log(record.isOpen)
           // Chưa điểm danh → hiện button
-          return (
-            <Upload
-              accept='image/*'
-              showUploadList={false}
-              beforeUpload={(file) => {
-                const todayStr = dayjs().format("DD/MM/YYYY");
-                const lessonId = lessonMap[todayStr];
+          if (record.isOpen) {
+            return (
+              <Upload
+                accept='image/*'
+                showUploadList={false}
+                beforeUpload={(file) => {
+                  const todayStr = dayjs().format("DD/MM/YYYY");
+                  const lessonId = lessonMap[todayStr];
 
-                if (!lessonId) {
-                  messageApi.error("Hôm nay không có buổi học!");
+                  if (!lessonId) {
+                    messageApi.error("Hôm nay không có buổi học!");
+                    return Upload.LIST_IGNORE;
+                  }
+
+                  handleAttend(lessonId, file);
                   return Upload.LIST_IGNORE;
-                }
-
-                handleAttend(lessonId, file);
-                return Upload.LIST_IGNORE;
-              }}
-            >
-              <Button type='primary'>
-                Điểm danh: {dayjs().format("DD/MM/YYYY")}
-              </Button>
-            </Upload>
-          );
+                }}
+              >
+                <Button type='primary'>
+                  Điểm danh: {dayjs().format("DD/MM/YYYY")}
+                </Button>
+              </Upload>
+            );
+          } else {
+           return (
+              <Tag icon={<AiFillAlert />} color='warning'>
+                Đã đóng điểm danh
+              </Tag>
+            );
+          }
         }
 
         // ========= QUÁ KHỨ =========
