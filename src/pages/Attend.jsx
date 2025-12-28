@@ -129,36 +129,44 @@ export default function Attend() {
       dataIndex: "status",
       key: "status",
       render: (status, record) => {
-        const today = dayjs().format("YYYY-MM-DD");
-        const lessonDate = record.date;
+        const today = dayjs().startOf("day");
+        const lessonDate = dayjs(record.date).startOf("day");
 
-        // ========= NGÀY HÔM NAY =========
+        // ========= TƯƠNG LAI =========
+        if (lessonDate.isAfter(today)) {
+          return (
+            <Tag icon={<ClockCircleOutlined />} color='default'>
+              Chưa diễn ra
+            </Tag>
+          );
+        }
 
-        if (lessonDate === today) {
+        // ========= HÔM NAY =========
+        if (lessonDate.isSame(today)) {
           if (status === "Present") {
             return (
               <Tag icon={<CheckCircleOutlined />} color='success'>
                 Có mặt
               </Tag>
             );
-          } else if (status === "Pending") {
-            {
-              return (
-                <Tag icon={<AiFillTags />} color='error'>
-                  Đã gửi yêu cầu
-                </Tag>
-              );
-            }
           }
 
-          // Chưa điểm danh → hiện Button
+          if (status === "Pending") {
+            return (
+              <Tag icon={<AiFillTags />} color='processing'>
+                Đã gửi yêu cầu
+              </Tag>
+            );
+          }
+
+          // Chưa điểm danh → hiện button
           return (
             <Upload
               accept='image/*'
               showUploadList={false}
               beforeUpload={(file) => {
-                const today = dayjs().format("DD/MM/YYYY");
-                const lessonId = lessonMap[today];
+                const todayStr = dayjs().format("DD/MM/YYYY");
+                const lessonId = lessonMap[todayStr];
 
                 if (!lessonId) {
                   messageApi.error("Hôm nay không có buổi học!");
@@ -166,7 +174,7 @@ export default function Attend() {
                 }
 
                 handleAttend(lessonId, file);
-                return Upload.LIST_IGNORE; // ngăn hiển thị file
+                return Upload.LIST_IGNORE;
               }}
             >
               <Button type='primary'>
@@ -177,9 +185,7 @@ export default function Attend() {
         }
 
         // ========= QUÁ KHỨ =========
-        console.log("status", status);
-        // if (dayjs(lessonDate).isBefore(today, "day")) {
-        return status == "Present" ? (
+        return status === "Present" ? (
           <Tag icon={<CheckCircleOutlined />} color='success'>
             Có mặt
           </Tag>
@@ -188,14 +194,6 @@ export default function Attend() {
             Vắng mặt
           </Tag>
         );
-        // }
-
-        // ========= TƯƠNG LAI =========
-        // return (
-        //   <Tag icon={<ClockCircleOutlined />} color="default">
-        //     Chưa diễn ra
-        //   </Tag>
-        // );
       },
     },
   ];

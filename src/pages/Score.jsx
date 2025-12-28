@@ -32,26 +32,44 @@ export default function Score() {
         final_score,
         attendance_score,
         exercise_score,
+        discuss_score,
+        project_score,
       } = item;
+
       const year = semester.year;
       const semName = semester.semester_name;
 
-      if (!mapData[year]) {
-        mapData[year] = {};
-      }
-      if (!mapData[year][semName]) {
-        mapData[year][semName] = [];
+      if (!mapData[year]) mapData[year] = {};
+      if (!mapData[year][semName]) mapData[year][semName] = [];
+
+      // ===== TÍNH ĐIỂM TRUNG BÌNH =====
+      let avgScore = null;
+
+      if (final_score != null) {
+        const validScores = [final_score];
+
+        if (attendance_score != null) validScores.push(attendance_score);
+        if (exercise_score != null) validScores.push(exercise_score);
+
+        avgScore =
+          validScores.reduce((sum, s) => sum + s, 0) / validScores.length;
       }
 
-      const hasAllScores =
-        attendance_score != null &&
-        exercise_score != null &&
-        mid_score != null &&
-        final_score != null;
-
-      const sum = hasAllScores
-        ? (attendance_score + exercise_score + mid_score + final_score) / 4
-        : null;
+      // ===== XẾP LOẠI =====
+      const ketQua =
+        avgScore != null
+          ? avgScore >= 9
+            ? "A+"
+            : avgScore >= 8.5
+            ? "A"
+            : avgScore >= 8
+            ? "B+"
+            : avgScore >= 7
+            ? "B"
+            : avgScore >= 5
+            ? "C"
+            : "F"
+          : null;
 
       mapData[year][semName].push({
         key: item.id,
@@ -59,43 +77,30 @@ export default function Score() {
         maMH: subject.subject_code,
         tenMH: subject.subject_name,
         tinChi: subject.subject_credit,
-        diemCC: attendance_score ?? "—", // Điểm chuyên cần
-        diemBT: exercise_score ?? "—", // Điểm bài tập
-        diemGK: mid_score ?? "—",
-        diemCK: final_score ?? "—",
-        ketQua:
-          sum != null
-            ? sum >= 9
-              ? "A+"
-              : sum >= 8.5
-              ? "A"
-              : sum >= 8
-              ? "B+"
-              : sum >= 7
-              ? "B"
-              : sum >= 5
-              ? "C"
-              : "F"
-            : null,
+        diemCC: attendance_score ?? "",
+        diemBT: exercise_score ?? "",
+        diemTL: discuss_score ?? "",
+        diemDA: project_score ?? "",
+        diemGK: mid_score ?? "",
+        diemCK: final_score ?? "",
+        ketQua,
       });
     });
 
-    // Sort năm học tăng dần
+    // ===== SORT NĂM HỌC GIẢM DẦN =====
     const sortedYears = Object.keys(mapData).sort((a, b) => b.localeCompare(a));
 
     const formattedData = sortedYears.flatMap((year) => {
-      // Sort học kỳ giảm dần (HK3 → HK2 → HK1)
-      const semesters = Object.keys(mapData[year])
+      // ===== SORT HỌC KỲ: HK3 → HK2 → HK1 =====
+      return Object.keys(mapData[year])
         .sort((a, b) => {
           const getNumber = (name) => parseInt(name.match(/\d+/)?.[0] || 0);
-          return getNumber(b) - getNumber(a); // đảo ngược
+          return getNumber(b) - getNumber(a);
         })
         .map((semName) => ({
           title: `${semName} - Năm học ${year}`,
           data: mapData[year][semName],
         }));
-
-      return semesters;
     });
 
     setGroupedData(formattedData);
@@ -118,9 +123,21 @@ export default function Score() {
       align: "center",
     },
     {
+      title: "Điểm thảo luận",
+      dataIndex: "diemTL",
+      key: "diemTL",
+      align: "center",
+    },
+    {
       title: "Điểm bài tập",
       dataIndex: "diemBT",
       key: "diemBT",
+      align: "center",
+    },
+    {
+      title: "Điểm đồ án",
+      dataIndex: "diemDA",
+      key: "diemDA",
       align: "center",
     },
     {
