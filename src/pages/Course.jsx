@@ -235,7 +235,7 @@ export default function ClassSchedule() {
           title={
             !isOpen
               ? "Không thể xóa ngoài thời gian đăng ký"
-              : "Are you sure you want to delete this course?"
+              : "Bạn có chắc muốn xoá?"
           }
           okText='Yes'
           cancelText='No'

@@ -117,7 +117,7 @@ export default function Enrollment() {
       end_date: item.end_date,
       max_capacity: item.max_capacity,
       quantity: item.quantity || 0,
-      remaining: item.max_capacity - (item.quantity ? item.quantity : 0),
+      remaining: item?.remain_slot || 0,
     }));
   }, [enrollments]);
 
